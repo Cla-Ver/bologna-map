@@ -1,0 +1,23 @@
+html, body{
+	height: 100%;
+}
+
+#app{
+	height: 100%;
+}
+
+fieldset {
+	outline-style: solid;
+	outline-width: 1px;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+fieldset > legend, div{
+	margin-left: 5px;
+	margin-bottom: 5px;
+}
+
+#map {
+	height: 100%;
+}
