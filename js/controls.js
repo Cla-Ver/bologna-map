@@ -26,11 +26,12 @@ $(document).ready(function(){
 			"endDate": document.getElementById("endDay").value,
 			"startHour": document.getElementById("startTime").value,
 			"endHour": document.getElementById("endTime").value,
-			"entireDay": document.getElementById("entireDay").value,
-			"singleDay": document.getElementById("singleDay").value
+			"entireDay": document.getElementById("entireDay").checked,
+			"singleDay": document.getElementById("singleDay").checked
 		};
 		//alert(JSON.stringify(data));
 		$.post("ajax.php", data, function(data, status){
+			//alert(data);
 			showTrafficData_php(JSON.parse(data));
 		});
 	});
