@@ -22,11 +22,11 @@ require "utilities.php";
 				</div>
 				<div>
 					<label for="startDay">Giorno iniziale di cui visualizzare le informazioni:</label>
-					<input type="date" id="startDay" name="startDay" >
+					<input type="date" id="startDay" name="startDay" :onchange="prova" value="2022-10-30">
 				</div>
 				<div>
 					<label for="endDay">Giorno finale di cui visualizzare le informazioni:</label>
-					<input type="date" id="endDay" name="endDay"  :disabled="singleDay">
+					<input type="date" id="endDay" name="endDay" :disabled="singleDay" value="2022-10-30">
 				</div>
 				<div>
 					<label for="startTime">Inserire l'ora di inizio transito:</label>
@@ -52,7 +52,7 @@ require "utilities.php";
 	</body>
 	<?php echo scripts(); ?>
 <?php 
-show_traffic_data("2022-10-29", "2022-10-30");
+show_traffic_data("2022-10-30", "2022-10-30");
 ?>
 
 </html>

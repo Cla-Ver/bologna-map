@@ -14,6 +14,10 @@ createApp({
 	  },
 	  disableEndDay(){
 		  this.singleDay = !this.singleDay;
+	  },
+	  prova(){
+		
+		alert("ciao");
 	  }
   }
 }).mount('#app')
@@ -29,10 +33,13 @@ $(document).ready(function(){
 			"entireDay": document.getElementById("entireDay").checked,
 			"singleDay": document.getElementById("singleDay").checked
 		};
-		//alert(JSON.stringify(data));
 		$.post("ajax.php", data, function(data, status){
-			//alert(data);
-			showTrafficData_php(JSON.parse(data));
+			if(status === "success"){
+				showTrafficData_php(JSON.parse(data));
+			}
+			else{
+				console.log("Ajax error");
+			}
 		});
 	});
 });

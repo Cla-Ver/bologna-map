@@ -5,13 +5,27 @@ let map;
 
 function initMap(){
 	//let today = new Date();
-	document.getElementById("startTime").setAttribute("value", "00:00");
+	/*document.getElementById("startTime").setAttribute("value", "00:00");
 	document.getElementById("endTime").setAttribute("value", "23:59");
 	document.getElementById("startDay").max = '2023-02-31';
-	updateMap("2022-10-30", "2022-10-31");
+	updateMap("2022-10-30", "2022-10-31");*/
 }
 
-function updateMap(startDate, endDate){
+function resetMap(){
+	if(typeof map !== "undefined"){
+		map.remove();
+	}
+	map = L.map('map', {
+		center: [44.5, 11.349],
+		zoom: 13
+	});		
+	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		maxZoom: 19,
+		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+	}).addTo(map);
+}
+
+/*function updateMap(startDate, endDate){
 	$(document).ready(function() {
 		//console.log(date);
 		let startHour, endHour;
@@ -43,9 +57,9 @@ function updateMap(startDate, endDate){
 		
 		showTrafficData(map, startDate, endDate, startHour, endHour);
 	});
-}
+}*/
 
-function setDate(){
+/*function setDate(){
 	updateMap(document.getElementById("startDay").value, document.getElementById("endDay").value);
 }
 
@@ -68,7 +82,7 @@ function setSingleDay(){
 	else{
 		document.getElementById("endDay").removeAttribute("disabled");
 	}
-}
+}*/
 
 // function showTrafficData(map, startDate, endDate, startHour, endHour){
 // 	let startDate_arr = startDate.split("-");
@@ -180,26 +194,15 @@ function setSingleDay(){
 // 		maxTrafficLocation.bindPopup("Tratto maggiormente trafficato");
 // 	});*/
 // }
+/**/
 
+/*Vado a costruire la mappa con tutte le informazioni */
 function showTrafficData_php(data){
 	$(document).ready(function(){
-		console.log(data);
-		if(typeof map !== "undefined"){
-			map.remove();
-		}
-		map = L.map('map', {
-			center: [44.5, 11.349],
-			zoom: 13
-		});		
-		const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-			maxZoom: 19,
-			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-		}).addTo(map);
-		//console.log(data.length);
+		resetMap();
 		let trafficDictionary = {};
 		let spireDictionary = {};
-		let maxTraffic;
-		let maxTrafficLocation;
+		/*Costruzione degli array chiave-valore per spire e strade.*/
 		for(let i = 0; i < data.length; i++) {
 			item = data[i];
 			//console.log(item["data"]);
@@ -230,31 +233,107 @@ function showTrafficData_php(data){
 				newdate.push(item["data"]);
 				spireDictionary[item["codice_spira"]] = {totalCars: parseInt(spireDictionary[item["codice_spira"]]["totalCars"]) + cars, geoPoint: [item["latitudine"], item["longitudine"]], date: newdate, streetName: item["nome_via"]};
 			}
-			//marker.bindPopup("Nome via: " + item["nome_via"] + "<br>Data: " + item["data"] + "<br>Direzione: " + item["direzione"] + "<br>Veicoli transitati: " + cars);
 		}
-		for([key, value] of Object.entries(spireDictionary)){
-			/*console.log(value);
-			break;*/
-			//console.log(value);
-			let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]]).addTo(map);
-			marker.bindPopup("Nome via: " + value["streetName"] + "<br>Data: " + value["date"] + "<br>Veicoli transitati: " + value["totalCars"]);
+		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
+		showMarkers(spireDictionary);
+		/*Mostro la via più trafficata*/
+		showBusiestRoad(trafficDictionary);
+		showHeatMap(spireDictionary);
+	});
+}
+
+/*Disegna sulla mappa tutti i segnalini delle spire, con tutte le loro informazioni */
+function showMarkers(spireMarkers){
+	for([key, value] of Object.entries(spireMarkers)){
+		let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]]).addTo(map);
+		marker.bindPopup("Nome via: " + value["streetName"] + "<br>Data: " + value["date"] + "<br>Veicoli transitati: " + value["totalCars"]);
+	}
+}
+
+/*Disegna sulla mappa la strada più trafficata*/
+function showBusiestRoad(trafficDictionary){
+	let maxTraffic;
+	let maxTrafficLocation;
+	for ([key, value] of Object.entries(trafficDictionary)){
+		if(typeof maxTraffic === "undefined" || (maxTraffic["totalCars"] / maxTraffic["geoPoints"].length) < (value["totalCars"] / value["geoPoints"].length)){
+			maxTraffic = value;
+			//console.log(maxTraffic);
 		}
-		
-		for ([key, value] of Object.entries(trafficDictionary)){
-			if(typeof maxTraffic === "undefined" || (maxTraffic["totalCars"] / maxTraffic["geoPoints"].length) < (value["totalCars"] / value["geoPoints"].length)){
-				maxTraffic = value;
-				//console.log(maxTraffic);
+	}
+	/*Se la via più trafficata ha una sola spira metto un cerchio, altrimenti disegno una linea che collega tutte le sue spire*/
+	if(maxTraffic["geoPoints"].length <= 1){
+		maxTrafficLocation = L.circle(maxTraffic["geoPoints"][0], {radius: 200, color: "red"}).addTo(map);
+	}
+	else{
+		//console.log(maxTraffic["geoPoints"]);
+		maxTrafficLocation = L.polyline(maxTraffic["geoPoints"], {color: "red"}).addTo(map);
+		console.log(maxTraffic["geoPoints"]);
+	}
+	maxTrafficLocation.bindPopup("Tratto maggiormente trafficato");
+
+}
+
+/*Disegna sulla mappa le zone più o meno trafficate */
+function showHeatMap(spireDictionary){
+	let maxLat, maxLong, minLat, minLong;
+	new Promise(resolve => {
+		for ([key, value] of Object.entries(spireDictionary)){
+			let itemLat = value["geoPoint"][0];
+			let itemLong = value["geoPoint"][1];
+			if(typeof maxLat === "undefined"){
+				maxLat = itemLat;
+				minLat = itemLat;
+				maxLong = itemLong;
+				minLong = itemLong;
+				continue;
 			}
+			minLat = itemLat < minLat ? itemLat : minLat;
+			maxLat = itemLat > maxLat ? itemLat : maxLat;
+			minLong = itemLong < minLong ? itemLong : minLong;
+			maxLong = itemLong > maxLong ? itemLong : maxLong;
+			//console.log(maxLong);
 		}
-		//console.log(maxTraffic);
-		if(maxTraffic["geoPoints"].length <= 1){
-			maxTrafficLocation = L.circle(maxTraffic["geoPoints"][0], {radius: 200, color: "red"}).addTo(map);
-		}
-		else{
-			//console.log(maxTraffic["geoPoints"]);
-			maxTrafficLocation = L.polyline(maxTraffic["geoPoints"], {color: "red"}).addTo(map);
-		}
-		maxTrafficLocation.bindPopup("Tratto maggiormente trafficato");
-	
+		resolve();
+	}).then(function(){
+		L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(map);
+		let latOffset = maxLat / 10000;
+		let longOffset = maxLong / 1000;
+		new Promise(resolve => {
+			//console.log(maxLat);
+			//L.polyline([[maxLat, maxLong], [minLat, minLong]], {color: "blue"}).addTo(map);
+			for(let i = minLat; i <= maxLat; i += latOffset){
+				L.polyline([[i, minLong], [i, maxLong]], {color: "blue"}).addTo(map);
+				//console.log(i);
+			}
+			for(let i = minLong; i <= maxLong; i += longOffset){
+				L.polyline([[minLat, i], [maxLat, i]], {color: "blue"}).addTo(map);
+				//console.log(i);
+			}
+
+			resolve();
+		}).then(function(){
+			let areas = {};
+			for ([key, value] of Object.entries(spireDictionary)){
+				let rectCoords = [Math.floor((parseFloat(value["geoPoint"][0]) - minLat) / latOffset), Math.floor((parseFloat(value["geoPoint"][1]) - minLong) / longOffset)];
+				
+				
+				if(!(rectCoords in areas)){
+					areas[rectCoords] = {totalCars: value["totalCars"], spires: 1};
+				}
+				else{
+					areas[rectCoords] = {totalCars: areas[rectCoords]["totalCars"] + value["totalCars"], spires: parseInt(areas[rectCoords]["spires"]) + 1};
+				}	
+				
+				
+				
+				//console.log(rectCoords);
+				//L.rectangle([[rectCoords[0] * latOffset + minLat, rectCoords[1] * longOffset + minLong], [(rectCoords[0] + 1) * latOffset + minLat , (rectCoords[1] + 1) * longOffset + minLong]], {color: "yellow"}).addTo(map);
+				//L.circle(value["geoPoint"], {radius: 200, color: "red"}).addTo(map);
+				//break;
+			}
+			//console.log(areas);
+			let sortedAreas = Object.entries(areas).sort((a, b) => a[1]["totalCars"] - b[1]["totalCars"]).filter((item) => {return item[1]["totalCars"] > 0;});
+			console.log(sortedAreas);
+		});
 	});
 }
