@@ -295,20 +295,20 @@ function showHeatMap(spireDictionary){
 		}
 		resolve();
 	}).then(function(){
-		L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(map);
-		let latOffset = maxLat / 10000;
+		//L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(map);
+		let latOffset = maxLat / 5000;
 		let longOffset = maxLong / 1000;
 		new Promise(resolve => {
 			//console.log(maxLat);
 			//L.polyline([[maxLat, maxLong], [minLat, minLong]], {color: "blue"}).addTo(map);
-			for(let i = minLat; i <= maxLat; i += latOffset){
+			/*for(let i = minLat; i <= maxLat; i += latOffset){
 				L.polyline([[i, minLong], [i, maxLong]], {color: "blue"}).addTo(map);
 				//console.log(i);
 			}
 			for(let i = minLong; i <= maxLong; i += longOffset){
 				L.polyline([[minLat, i], [maxLat, i]], {color: "blue"}).addTo(map);
 				//console.log(i);
-			}
+			}*/
 
 			resolve();
 		}).then(function(){
@@ -321,7 +321,9 @@ function showHeatMap(spireDictionary){
 					areas[rectCoords] = {totalCars: value["totalCars"], spires: 1};
 				}
 				else{
-					areas[rectCoords] = {totalCars: areas[rectCoords]["totalCars"] + value["totalCars"], spires: parseInt(areas[rectCoords]["spires"]) + 1};
+					if(value["totalCars"] > 0){
+						areas[rectCoords] = {totalCars: areas[rectCoords]["totalCars"] + value["totalCars"], spires: parseInt(areas[rectCoords]["spires"]) + 1};
+					}
 				}	
 				
 				
@@ -332,8 +334,16 @@ function showHeatMap(spireDictionary){
 				//break;
 			}
 			//console.log(areas);
-			let sortedAreas = Object.entries(areas).sort((a, b) => a[1]["totalCars"] - b[1]["totalCars"]).filter((item) => {return item[1]["totalCars"] > 0;});
-			console.log(sortedAreas);
+			let sortedAreas = Object.entries(areas).sort((a, b) => (b[1]["totalCars"] / b[1]["spires"]) - (a[1]["totalCars"] / a[1]["spires"])).filter((item) => {return item[1]["totalCars"] > 0;});
+			for(let i = 0; i < 4; i++){
+				let marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "red"}).addTo(map)
+				marker.bindPopup("Zona maggiormente trafficata");	
+			}
+			for(let i = sortedAreas.length - 1; i >= sortedAreas.length - 4; i--){
+				marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "#19e53e"}).addTo(map)
+				marker.bindPopup("Zona meno trafficata");	
+			}
+			//console.log(sortedAreas);
 		});
 	});
 }

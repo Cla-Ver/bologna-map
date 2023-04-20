@@ -21,3 +21,7 @@ fieldset > legend, div{
 #map {
 	height: 100%;
 }
+
+.hide{
+	visibility: hidden;
+}

@@ -18,7 +18,7 @@ require "utilities.php";
 			<fieldset>
 				<legend> Controlli </legend>
 				<div id="alerts">
-					
+					{{alerts}}
 				</div>
 				<div>
 					<label for="startDay">Giorno iniziale di cui visualizzare le informazioni:</label>
@@ -26,7 +26,7 @@ require "utilities.php";
 				</div>
 				<div>
 					<label for="endDay">Giorno finale di cui visualizzare le informazioni:</label>
-					<input type="date" id="endDay" name="endDay" :disabled="singleDay" value="2022-10-30">
+					<input type="date" id="endDay" name="endDay" :onchange="prova" :disabled="singleDay" value="2022-10-30">
 				</div>
 				<div>
 					<label for="startTime">Inserire l'ora di inizio transito:</label>
@@ -34,15 +34,23 @@ require "utilities.php";
 				</div>
 				<div>
 					<label for="endTime">Inserire l'ora di fine transito:</label>
-					<input type="time" id="endTime" name="endTime"  :disabled="wholeDay">
+					<input type="time" id="endTime" name="endTime" :onchange="prova" :disabled="wholeDay">
 				</div>
 				<div>
-					<input type="checkbox" id="entireDay" @click="disableEndTime" :checked="wholeDay"/>
+					<input type="checkbox" id="entireDay" @click="disableEndTime" :onchange="prova" :checked="wholeDay"/>
 					<label for="entireDay"> Giorno intero </label>
 				</div>
 				<div>
 					<input type="checkbox" id="singleDay" @click="disableEndDay" :checked="singleDay"/>
 					<label for="singleDay"> Giorno singolo </label>
+				</div>
+				<div>
+					<input type="checkbox" id="heatMap" :checked="heatMap" @click="showHeatMap"/>
+					<label for="heatMap"> Mostra mappa di calore </label>
+				</div>
+				<div>
+					<label id="heatMapZonesLabel" for="heatMapZones"> Numero di zone da visualizzare: </label>
+					<input type="number" id="heatMapZones" name="heatMapZones" value="1" min="0">
 				</div>
 
 			</fieldset>

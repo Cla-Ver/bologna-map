@@ -4,8 +4,10 @@ createApp({
   data() {
 	return {
 	  message: 'Hello Vue!',
+	  alerts: '',
 	  wholeDay: true,
-	  singleDay: true
+	  singleDay: true,
+	  heatMap: true
 	}
   },
   methods: {
@@ -16,8 +18,27 @@ createApp({
 		  this.singleDay = !this.singleDay;
 	  },
 	  prova(){
-		
-		alert("ciao");
+		this.alerts = "";
+		if(!this.singleDay && new Date(document.getElementById("startDay").value).getTime() > new Date(document.getElementById("endDay").value).getTime()){
+			this.alerts += "<h2>Attenzione: la data di inizio è meno recente della data di fine</h2>";
+			console.log("ciao");
+		}
+		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== "00" && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
+			this.alerts += "<h2>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h2>";
+		}
+		//alert("ciao");
+	  },
+	  showHeatMap(){
+		this.heatMap = !this.heatMap;
+		if(this.heatMap){
+			document.getElementById("heatMapZones").removeAttribute("class");
+			document.getElementById("heatMapZonesLabel").removeAttribute("class");
+		}
+		else{
+			document.getElementById("heatMapZones").setAttribute("class", "hide");
+			document.getElementById("heatMapZonesLabel").setAttribute("class", "hide");
+
+		}
 	  }
   }
 }).mount('#app')
@@ -31,11 +52,15 @@ $(document).ready(function(){
 			"startHour": document.getElementById("startTime").value,
 			"endHour": document.getElementById("endTime").value,
 			"entireDay": document.getElementById("entireDay").checked,
-			"singleDay": document.getElementById("singleDay").checked
+			"singleDay": document.getElementById("singleDay").checked,
+			"showHeatMap": document.getElementById("heatMap").checked,
+			"heatMapZones": document.getElementById("heatMapZones").value
 		};
 		$.post("ajax.php", data, function(data, status){
 			if(status === "success"){
-				showTrafficData_php(JSON.parse(data));
+				if(data.length > 0){
+					showTrafficData_php(JSON.parse(data));
+				}
 			}
 			else{
 				console.log("Ajax error");

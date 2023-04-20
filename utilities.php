@@ -23,15 +23,18 @@ function scripts(){
 /**/
 function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
   //Dates are YYYY-MM-DD
-  $curDate = date_create($startDate, timezone_open("Europe/Rome"));
+  $startDate = date_create($startDate, timezone_open("Europe/Rome"));
   $connection = connection();
   $endDate = date_create($endDate, timezone_open("Europe/Rome"));
+  if ($startDate > $endDate){
+    return "";
+  }
   //curl_setopt($curl, CURLOPT_HTTPGET, 1); //GET is default
   $json_result = "";
   $i = 0;
   $r = 0;
   $result_rows = array();
-  for($curDate = date_create($startDate, timezone_open("Europe/Rome")); date_diff($curDate, $endDate)->format("%R%a") >= 0; $curDate->modify("+1 day")){
+  for($curDate = $startDate; date_diff($curDate, $endDate)->format("%R%a") >= 0; $curDate->modify("+1 day")){
     //echo date_format($curDate, "Y/m/d") . "\n";
     $api_formatted_curDate = date_format($curDate,"Y-m-d");
     $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data=?");
@@ -66,6 +69,10 @@ function connection(){
 
 function show_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
   $traffic_info_json = get_traffic_data($startDate, $endDate, $startHour, $endHour);
+  if(strlen($traffic_info_json) <= 0){
+    echo "<script>resetMap();</script>";
+    return;
+  }
   echo "<script>showTrafficData_php(" . $traffic_info_json . ");</script>";
 }
 
