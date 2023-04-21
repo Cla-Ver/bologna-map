@@ -108,7 +108,7 @@ function showBusiestRoad(trafficDictionary){
 	else{
 		//console.log(maxTraffic["geoPoints"]);
 		maxTrafficLocation = L.polyline(maxTraffic["geoPoints"], {color: "red"}).addTo(map);
-		console.log(maxTraffic["geoPoints"]);
+		//console.log(maxTraffic["geoPoints"]);
 	}
 	maxTrafficLocation.bindPopup("Tratto maggiormente trafficato");
 
@@ -137,8 +137,9 @@ function showHeatMap(spireDictionary, zones = 1){
 		}
 		resolve();
 	}).then(function(){
-		let latOffset = maxLat / 5000;
-		let longOffset = maxLong / 1000;
+		let latOffset = maxLat / (1500 * (parseInt($("#heatMapZonesRange").attr("max")) + 1 - parseInt(document.getElementById("heatMapZonesRange").value)));
+		let longOffset = maxLong / (300 * ( parseInt($("#heatMapZonesRange").attr("max")) + 1 - parseInt(document.getElementById("heatMapZonesRange").value)));
+
 		new Promise(resolve => {
 			if(drawGrid){
 				L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(map);
