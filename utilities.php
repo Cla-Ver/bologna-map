@@ -73,7 +73,7 @@ function show_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
     echo "<script>resetMap();</script>";
     return;
   }
-  echo "<script>showTrafficData_php(" . $traffic_info_json . ");</script>";
+  echo "<script>showTrafficData(" . $traffic_info_json . ", " . $startHour . ", " . $endHour . ");</script>";
 }
 
 ?>

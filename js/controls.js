@@ -13,18 +13,28 @@ createApp({
   methods: {
 	  disableEndTime(){
 		  this.wholeDay = !this.wholeDay;
+		  if(this.wholeDay){
+			document.getElementById("timeDiv").setAttribute("class", "hide");
+			//document.getElementById("endDayDiv").setAttribute("class", "hide");
+		  }
+		  else{
+			document.getElementById("timeDiv").removeAttribute("class");
+		  }
 	  },
 	  disableEndDay(){
 		  this.singleDay = !this.singleDay;
 	  },
-	  prova(){
+	  checkAlerts(){
 		this.alerts = "";
 		if(!this.singleDay && new Date(document.getElementById("startDay").value).getTime() > new Date(document.getElementById("endDay").value).getTime()){
 			this.alerts += "<h2>Attenzione: la data di inizio è meno recente della data di fine</h2>";
 			console.log("ciao");
 		}
-		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== "00" && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
+		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== 0 && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
 			this.alerts += "<h2>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h2>";
+		}
+		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) !== 2022 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) !== 2022)){
+			this.alerts += "<h2>Attenzione: nel database sono presenti dati solo per l'anno 2022</h2>"
 		}
 		//alert("ciao");
 	  },
@@ -56,10 +66,10 @@ $(document).ready(function(){
 			"showHeatMap": document.getElementById("heatMap").checked,
 			"heatMapZones": document.getElementById("heatMapZones").value
 		};
-		$.post("ajax.php", data, function(data, status){
+		$.post("ajax.php", data, function(result, status){
 			if(status === "success"){
-				if(data.length > 0){
-					showTrafficData_php(JSON.parse(data));
+				if(result.length > 0){
+					showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
 				}
 			}
 			else{
