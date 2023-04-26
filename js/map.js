@@ -12,17 +12,24 @@ function initMap(){
 }
 
 function resetMap(){
-	if(typeof map !== "undefined"){
-		map.remove();
-	}
-	map = L.map('map', {
-		center: [44.5, 11.349],
-		zoom: 13
-	});		
+
+
 	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
 		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-	}).addTo(map);
+	});
+
+	if(typeof map !== "undefined"){
+		map.remove();
+	}
+
+	map = L.map('map', {
+		center: [44.5, 11.349],
+		zoom: 13,
+		layers: tiles
+		//layers: tiles
+	});
+
 }
 
 /*Vado a costruire la mappa con tutte le informazioni */
@@ -74,11 +81,12 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			}
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
-		showMarkers(spireDictionary);
+		//showMarkers(spireDictionary);
+		heatmap_plugin(spireDictionary);
 		/*Mostro la via più trafficata*/
 		showBusiestRoad(trafficDictionary);
 		if(document.getElementById("heatMap").checked){
-			showHeatMap(spireDictionary, document.getElementById("heatMapZones").value);
+			//showHeatMap(spireDictionary, document.getElementById("heatMapZones").value);
 		}
 	});
 }
@@ -189,4 +197,43 @@ function showHeatMap(spireDictionary, zones = 1){
 			//console.log(sortedAreas);
 		});
 	});
+}
+
+function heatmap_plugin(spireDictionary){
+	traffic = [];
+	let maxCars = getMax_spire(spireDictionary);
+	for([key, value] of Object.entries(spireDictionary)){
+		let spire = {};
+		spire["lat"] = value["geoPoint"][0];
+		spire["lng"] = value["geoPoint"][1];
+		spire["value"] = value["totalCars"] / maxCars;
+		traffic.push(spire);
+	}
+	const config = {
+		"maxOpacity": .7,
+		"useLocalExtrema": false,
+		valueField: "totalCars",
+		"radius": 20,
+		"scaleRadius": false
+	};
+
+	let heatmapLayer = new HeatmapOverlay(config);
+
+	map.addLayer(heatmapLayer);
+	heatmapLayer.setData({
+		data: traffic,
+		max: 1,
+		min: 0
+	});
+	console.log(traffic);
+}
+
+function getMax_spire(spireDictionary){
+	let max;
+	for([key, value] of Object.entries(spireDictionary)){
+		if(typeof max === "undefined" || max < value["totalCars"]){
+			max = value["totalCars"];
+		}
+	}
+	return max;
 }
