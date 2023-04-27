@@ -1,6 +1,7 @@
 //import {showTrafficData} from "utilities.js";
 
 let map;
+let carIcon;
 //initMap();
 
 function initMap(){
@@ -30,6 +31,13 @@ function resetMap(){
 		//layers: tiles
 	});
 
+	carIcon = L.Icon.extend({
+		options:{
+			iconUrl: "resources/car-front.svg",
+			popupAnchor: [-3, -20]	
+		}
+	});
+
 }
 
 /*Vado a costruire la mappa con tutte le informazioni */
@@ -41,6 +49,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		}
 		let trafficDictionary = {};
 		let spireDictionary = {};
+		let streetsTrafficWithDirection = {};
 		/*Costruzione degli array chiave-valore per spire e strade.*/
 		for(let i = 0; i < data.length; i++) {
 			item = data[i];
@@ -79,9 +88,17 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 				newdate.push(item["data"]);
 				spireDictionary[item["codice_spira"]] = {totalCars: parseInt(spireDictionary[item["codice_spira"]]["totalCars"]) + cars, geoPoint: [item["latitudine"], item["longitudine"]], date: newdate, streetName: item["nome_via"]};
 			}
+			let key = item["nome_via"] + " / " + item["direzione"];
+			if(!(key in streetsTrafficWithDirection)){
+				streetsTrafficWithDirection[key] = {streetName: item["nome_via"], totalCars: cars, geoPoint: [[item["latitudine"], item["longitudine"]]], direction: item["direzione"]};
+			}
+			else{
+				streetsTrafficWithDirection[key] = {streetName: item["nome_via"], totalCars: parseInt(streetsTrafficWithDirection[key]["totalCars"]) + cars, geoPoint: [[item["latitudine"], item["longitudine"]]], direction: item["direzione"]};
+			}
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
 		//showMarkers(spireDictionary);
+		showMarkers_icons(streetsTrafficWithDirection);
 		heatmap_plugin(spireDictionary);
 		/*Mostro la via più trafficata*/
 		showBusiestRoad(trafficDictionary);
@@ -94,8 +111,19 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 /*Disegna sulla mappa tutti i segnalini delle spire, con tutte le loro informazioni */
 function showMarkers(spireMarkers){
 	for([key, value] of Object.entries(spireMarkers)){
-		let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]]).addTo(map);
+		let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]], {icon: carIcon}).addTo(map);
 		marker.bindPopup("Nome via: " + value["streetName"] + "<br>Data: " + value["date"] + "<br>Veicoli transitati: " + value["totalCars"]);
+	}
+}
+
+function showMarkers_icons(streetsTrafficWithDirection){
+	let maxCars = getMax_spire(streetsTrafficWithDirection);
+	for([key, value] of Object.entries(streetsTrafficWithDirection)){
+		if(value["direction"].length > 0){
+			let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [50 * (value["totalCars"] / maxCars), 50 * (value["totalCars"] / maxCars)]})}).addTo(map);
+			marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"]);	
+		}
+		//console.log(maxCars);
 	}
 }
 
@@ -213,8 +241,8 @@ function heatmap_plugin(spireDictionary){
 		"maxOpacity": .7,
 		"useLocalExtrema": false,
 		valueField: "totalCars",
-		"radius": 20,
-		"scaleRadius": false
+		"radius": 0.0022,
+		"scaleRadius": true
 	};
 
 	let heatmapLayer = new HeatmapOverlay(config);
@@ -222,12 +250,11 @@ function heatmap_plugin(spireDictionary){
 	map.addLayer(heatmapLayer);
 	heatmapLayer.setData({
 		data: traffic,
-		max: 1,
-		min: 0
+		max: 2.5
 	});
-	console.log(traffic);
 }
 
+/* Cerca il massimo in un dictionary in cui nel suo campo valore ha il campo "totalCars" */
 function getMax_spire(spireDictionary){
 	let max;
 	for([key, value] of Object.entries(spireDictionary)){
