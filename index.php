@@ -50,14 +50,14 @@ require "utilities.php";
 					<input type="checkbox" id="heatMap" :checked="heatMap" @click="showHeatMap"/>
 					<label for="heatMap"> Mostra mappa di calore </label>
 				</div>
-				<div>
+				<!--div>
 					<label id="heatMapZonesLabel" for="heatMapZones"> Numero di zone da visualizzare: </label>
 					<input type="number" id="heatMapZones" name="heatMapZones" value="1" min="0" max="20">
 				</div>
 				<div>
 					<label id="heatMapZonesRangeLabel" for="heatMapZonesRange"> Dimensione dell'area da considerare: </label>
 					<input type="range" id="heatMapZonesRange" name="heatMapZonesRange" value="3" min="1" max="10">
-				</div>
+				</div-->
 
 			</fieldset>
 			<div id="map" name="map">

@@ -29,3 +29,11 @@ fieldset > legend, div{
 .hide{
 	visibility: hidden;
 }
+
+@keyframes fade{
+	from {opacity: 0.5;}
+}
+
+.markerDirectionAnim{
+	animation: fade 1s infinite alternate;
+}
