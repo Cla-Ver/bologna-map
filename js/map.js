@@ -107,7 +107,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		showBusiestRoad(trafficDictionary);
 		if(document.getElementById("heatMap").checked){
 			//showHeatMap(spireDictionary, document.getElementById("heatMapZones").value);
-			//heatmap_plugin(spireDictionary);
+			heatmap_plugin(spireDictionary);
 		}
 		
 	});
@@ -121,19 +121,32 @@ function showMarkers(spireMarkers){
 	}
 }
 
+/*Disegna sulla mappa tutti i segnalini delle spire, con o senza animazioni*/
 function showMarkers_icons(streetsTrafficWithDirection){
 	let maxCars = getMax_spire(streetsTrafficWithDirection);
 	for([key, value] of Object.entries(streetsTrafficWithDirection)){
 		if(value["direction"].length > 0 && value["totalCars"] > 0){
-			let size = 50 * (value["totalCars"] / maxCars);
-			size = size < 5 ? 5 : size;
-			if(value["geoPoint"].length <= 1){
+			let size = 50 * (value["totalCars"] / maxCars); // Calcolo dimensione segnalino in base a quello con più auto
+			size = size < 5 ? 5 : size; // Serve per non fare segnalini troppo piccoli
+			if(value["geoPoint"].length <= 1 || !document.getElementById("animatedMarkers").checked){
 				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(map);
 				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100);	
 			}
 			else{
 				let pointList = [];
-				value["geoPoint"].sort((a, b) => (a[1] - b[1]));
+				/*In base alla direzione delle auto, ordino i punti delle spire in base alle loro coordinate*/
+				if(value["direction"].includes("N")){
+					value["geoPoint"].sort((a, b) => (a[0] - b[0]));
+				}
+				else if(value["direction"].includes("S")){
+					value["geoPoint"].sort((a, b) => (b[0] - a[0]));
+				}
+				else if(value["direction"] === "E"){
+					value["geoPoint"].sort((a, b) => (a[1] - b[1]));
+				}
+				else if(value["direction"] === "O"){
+					value["geoPoint"].sort((a, b) => (b[1] - a[1]));
+				}
 				for(point of value["geoPoint"]){
 					pointList.push({latlng: [point[0], point[1]]});
 				}
@@ -141,8 +154,6 @@ function showMarkers_icons(streetsTrafficWithDirection){
 				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100);	
 			}
 		}
-		//break;
-		//console.log(maxCars);
 	}
 }
 
@@ -246,6 +257,7 @@ function showHeatMap(spireDictionary, zones = 1){
 	});
 }
 
+/*Mostra la mappa di calore*/
 function heatmap_plugin(spireDictionary){
 	traffic = [];
 	let maxCars = getMax_spire(spireDictionary) * 0.7;
@@ -278,7 +290,7 @@ function heatmap_plugin(spireDictionary){
 		data: traffic,
 		max: maxCars
 	});
-	console.log(traffic);
+	//console.log(traffic);
 }
 
 /* Cerca il massimo in un dictionary in cui nel suo campo valore ha il campo "totalCars" */

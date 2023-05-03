@@ -7,7 +7,8 @@ createApp({
 	  alerts: '',
 	  wholeDay: true,
 	  singleDay: true,
-	  heatMap: true
+	  heatMap: true,
+	  animatedMarkers: false
 	}
   },
   methods: {
@@ -40,7 +41,7 @@ createApp({
 	  },
 	  showHeatMap(){
 		this.heatMap = !this.heatMap;
-		if(this.heatMap){
+		/*if(this.heatMap){
 			document.getElementById("heatMapZones").removeAttribute("class");
 			document.getElementById("heatMapZonesLabel").removeAttribute("class");
 		}
@@ -48,7 +49,10 @@ createApp({
 			document.getElementById("heatMapZones").setAttribute("class", "hide");
 			document.getElementById("heatMapZonesLabel").setAttribute("class", "hide");
 
-		}
+		}*/
+	  },
+	  toggleAnimatedMarkers(){
+		this.animatedMarkers = !this.animatedMarkers;
 	  }
   }
 }).mount('#app')
@@ -64,7 +68,8 @@ $(document).ready(function(){
 			"entireDay": document.getElementById("entireDay").checked,
 			"singleDay": document.getElementById("singleDay").checked,
 			"showHeatMap": document.getElementById("heatMap").checked,
-			"heatMapZones": document.getElementById("heatMapZones").value
+			"animatedMarkers": document.getElementById("animatedMarkers").checked
+			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
 		$.post("ajax.php", data, function(result, status){
 			if(status === "success"){
