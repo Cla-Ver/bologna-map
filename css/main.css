@@ -37,3 +37,7 @@ fieldset > legend, div{
 .markerDirectionAnim{
 	animation: fade 1s infinite alternate;
 }
+
+h2{
+	text-align: center;
+}

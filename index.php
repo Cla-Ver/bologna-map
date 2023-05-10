@@ -66,6 +66,7 @@ require "utilities.php";
 				</div-->
 
 			</fieldset>
+			<h2 id="mapTitle"></h2>
 			<div id="map" name="map">
 			</div>
 		</div>

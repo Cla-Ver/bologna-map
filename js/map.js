@@ -1,6 +1,8 @@
 //import {showTrafficData} from "utilities.js";
 
 let map;
+let mapLayerGroup;
+let heatmapLayer;
 let carIcon;
 
 const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -30,19 +32,28 @@ function initMap(){
 function resetMap(){
 
 	if(typeof map !== "undefined"){
-		map.remove();
+		mapLayerGroup.clearLayers();
 	}
-
-	map = L.map('map', {
-		center: [44.5, 11.349],
-		zoom: 13,
-		layers: tiles
-		//layers: tiles
-	});
+	else{
+		map = L.map('map', {
+			center: [44.5, 11.349],
+			zoom: 13,
+			layers: tiles
+			//layers: tiles
+		});
+		mapLayerGroup = L.layerGroup().addTo(map);
+	}
+	//if(typeof)
+	/*(typeof heatmapLayer !== "undefined"){
+		heatmapLayer.setData({});
+	}*/
+	
+	
 
 }
 
-/*Vado a costruire la mappa con tutte le informazioni */
+/*Vado a costruire la mappa con tutte le informazioni in ingresso.*/
+/*Questa funzione non fa alcuna interrogazione al database, ma mostra solamente i dati che le vengono introdotti (variabile data)*/
 function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 	$(document).ready(function(){
 		resetMap();
@@ -105,7 +116,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		showMarkers_icons(streetsTrafficWithDirection);
 		
 		/*Mostro la via più trafficata*/
-		showBusiestRoad(trafficDictionary);
+		//showBusiestRoad(trafficDictionary);
 		if(document.getElementById("heatMap").checked){
 			//showHeatMap(spireDictionary, document.getElementById("heatMapZones").value);
 			heatmap_plugin(spireDictionary);
@@ -117,7 +128,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 /*Disegna sulla mappa tutti i segnalini delle spire, con tutte le loro informazioni */
 function showMarkers(spireMarkers){
 	for([key, value] of Object.entries(spireMarkers)){
-		let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]], {icon: carIcon}).addTo(map);
+		let marker = L.marker([value["geoPoint"][0], value["geoPoint"][1]], {icon: carIcon}).addTo(mapLayerGroup);
 		marker.bindPopup("Nome via: " + value["streetName"] + "<br>Data: " + value["date"] + "<br>Veicoli transitati: " + value["totalCars"]);
 	}
 }
@@ -130,7 +141,7 @@ function showMarkers_icons(streetsTrafficWithDirection){
 			let size = 50 * (value["totalCars"] / maxCars); // Calcolo dimensione segnalino in base a quello con più auto
 			size = size < 8 ? 8 : size; // Serve per non fare segnalini troppo piccoli
 			if(value["geoPoint"].length <= 1 || !document.getElementById("animatedMarkers").checked){
-				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(map);
+				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(mapLayerGroup);
 				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
 			}
 			else{
@@ -151,7 +162,7 @@ function showMarkers_icons(streetsTrafficWithDirection){
 				for(point of value["geoPoint"]){
 					pointList.push({latlng: [point[0], point[1]]});
 				}
-				let markerPlayer = L.markerPlayer(pointList, 5000, {icon: new carIcon({iconSize: [size, size]}), loop: true, autostart: true}).addTo(map);
+				let markerPlayer = L.markerPlayer(pointList, 5000, {icon: new carIcon({iconSize: [size, size]}), loop: true, autostart: true}).addTo(mapLayerGroup);
 				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
 			}
 		}
@@ -170,11 +181,11 @@ function showBusiestRoad(trafficDictionary){
 	}
 	/*Se la via più trafficata ha una sola spira metto un cerchio, altrimenti disegno una linea che collega tutte le sue spire*/
 	if(maxTraffic["geoPoints"].length <= 1){
-		maxTrafficLocation = L.circle(maxTraffic["geoPoints"][0], {radius: 200, color: "red"}).addTo(map);
+		maxTrafficLocation = L.circle(maxTraffic["geoPoints"][0], {radius: 200, color: "red"}).addTo(mapLayerGroup);
 	}
 	else{
 		//console.log(maxTraffic["geoPoints"]);
-		maxTrafficLocation = L.polyline(maxTraffic["geoPoints"], {color: "red"}).addTo(map);
+		maxTrafficLocation = L.polyline(maxTraffic["geoPoints"], {color: "red"}).addTo(mapLayerGroup);
 		//console.log(maxTraffic["geoPoints"]);
 	}
 	maxTrafficLocation.bindPopup("Tratto maggiormente trafficato");
@@ -209,12 +220,12 @@ function showHeatMap(spireDictionary, zones = 1){
 
 		new Promise(resolve => {
 			if(drawGrid){
-				L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(map);
+				L.polyline([[maxLat, maxLong], [minLat, maxLong], [minLat, minLong], [maxLat, minLong], [maxLat, maxLong]], {color: "blue"}).addTo(mapLayerGroup);
 				for(let i = minLat; i <= maxLat; i += latOffset){
-					L.polyline([[i, minLong], [i, maxLong]], {color: "blue"}).addTo(map);
+					L.polyline([[i, minLong], [i, maxLong]], {color: "blue"}).addTo(mapLayerGroup);
 				}
 				for(let i = minLong; i <= maxLong; i += longOffset){
-					L.polyline([[minLat, i], [maxLat, i]], {color: "blue"}).addTo(map);
+					L.polyline([[minLat, i], [maxLat, i]], {color: "blue"}).addTo(mapLayerGroup);
 				}
 			}
 			resolve();
@@ -246,11 +257,11 @@ function showHeatMap(spireDictionary, zones = 1){
 			zones = zones < 1 ? 1 : zones;
 			zones = zones > 20 ? 20 : zones;
 			for(let i = 0; i < zones; i++){
-				let marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "red"}).addTo(map)
+				let marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "red"}).addTo(mapLayerGroup)
 				marker.bindPopup("Zona molto trafficata");	
 			}
 			for(let i = sortedAreas.length - 1; i >= sortedAreas.length - zones; i--){
-				marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "#19e53e"}).addTo(map)
+				marker = L.rectangle([[parseInt(sortedAreas[i][0].split(",")[0]) * latOffset + minLat, parseInt(sortedAreas[i][0].split(",")[1]) * longOffset + minLong], [(parseInt(sortedAreas[i][0].split(",")[0]) + 1) * latOffset + minLat , (parseInt(sortedAreas[i][0].split(",")[1]) + 1) * longOffset + minLong]], {color: "#19e53e"}).addTo(mapLayerGroup)
 				marker.bindPopup("Zona poco trafficata");	
 			}
 			//console.log(sortedAreas);
@@ -284,9 +295,9 @@ function heatmap_plugin(spireDictionary){
 		lngField: "lng"
 	};
 
-	let heatmapLayer = new HeatmapOverlay(config);
+	heatmapLayer = new HeatmapOverlay(config);
 
-	map.addLayer(heatmapLayer);
+	mapLayerGroup.addLayer(heatmapLayer);
 	heatmapLayer.setData({
 		data: traffic,
 		max: maxCars
@@ -307,22 +318,24 @@ function getMax_spire(spireDictionary){
 
 function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true, daysInterval = 1){
 	data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
-	let startDate = addDays(new Date(data[0]["data"]), -1);
-	let endDate = new Date(data[data.length - 1]["data"]);
-	//for(let curDate = startDate; curDate < endDate; curDate = addDays(curDate, 1)){
+	let startDate = new Date(data[0]["data"]);
+	let endDate = addDays(new Date(data[data.length - 1]["data"]), 1);
 	let curDate = startDate;
-	setInterval(function(){
+	const cd = setInterval(function(){
+		
 		if(document.getElementById("cyclingDays").checked){
-			curDate = addDays(curDate, 1);
 			if(curDate > endDate){
 				curDate = startDate;
-				curDate = addDays(curDate, 1);
+				//curDate = addDays(curDate, 1);
 			}
 			let curData = data.filter((item) => item["data"] === curDate.toLocaleDateString("en-CA"));
-			showTrafficData(curData, startHour, endHour, wholeDay);	
+			showTrafficData(curData, startHour, endHour, wholeDay);
+			document.getElementById("mapTitle").innerHTML = "Mappa in data: " + curDate.toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
+			curDate = addDays(curDate, 1);
 		}
 		else{
-			return;
+			document.getElementById("mapTitle").innerHTML = "";
+			clearInterval(cd);
 		}
 	}, 5000);
 	//}
