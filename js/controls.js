@@ -8,7 +8,8 @@ createApp({
 	  wholeDay: true,
 	  singleDay: true,
 	  heatMap: true,
-	  animatedMarkers: false
+	  animatedMarkers: false,
+	  cyclingDays: false
 	}
   },
   methods: {
@@ -24,6 +25,12 @@ createApp({
 	  },
 	  disableEndDay(){
 		  this.singleDay = !this.singleDay;
+			if(!this.singleDay){
+				document.getElementById("cyclingDaysDiv").removeAttribute("class");
+			}
+			else{
+				document.getElementById("cyclingDaysDiv").setAttribute("class", "hide");
+			}
 	  },
 	  checkAlerts(){
 		this.alerts = "";
@@ -53,12 +60,15 @@ createApp({
 	  },
 	  toggleAnimatedMarkers(){
 		this.animatedMarkers = !this.animatedMarkers;
+	  },
+	  toggleCyclingDays(){
+		this.cyclingDays = !this.cyclingDays;
 	  }
   }
 }).mount('#app')
 
 $(document).ready(function(){
-	$("input").change(function(){
+	$("input").change(function(e){
 		let data = {
 			"action": "change",
 			"startDate": document.getElementById("startDay").value,
@@ -68,9 +78,23 @@ $(document).ready(function(){
 			"entireDay": document.getElementById("entireDay").checked,
 			"singleDay": document.getElementById("singleDay").checked,
 			"showHeatMap": document.getElementById("heatMap").checked,
-			"animatedMarkers": document.getElementById("animatedMarkers").checked
+			"animatedMarkers": document.getElementById("animatedMarkers").checked,
+			"cyclingDays": document.getElementById("cyclingDays").checked
 			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
+		if(e.target.id === "cyclingDays"){
+			$.post("ajax.php", data, function(result, status){
+				if(status === "success"){
+					if(result.length > 0){
+						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+					}
+				}
+				else{
+					console.log("Ajax error in cycling days");
+				}
+			});	
+			return;
+		}
 		$.post("ajax.php", data, function(result, status){
 			if(status === "success"){
 				if(result.length > 0){
@@ -78,7 +102,7 @@ $(document).ready(function(){
 				}
 			}
 			else{
-				console.log("Ajax error");
+				console.log("Ajax error in showing traffic data");
 			}
 		});
 	});

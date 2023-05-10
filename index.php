@@ -46,6 +46,12 @@ require "utilities.php";
 					<input type="checkbox" id="singleDay" @click="disableEndDay" :checked="singleDay"/>
 					<label for="singleDay"> Giorno singolo </label>
 				</div>
+				<div id="cyclingDaysDiv" class="hide">
+					<div>
+						<input type="checkbox" id="cyclingDays" :checked="cyclingDays"/>
+						<label for="cyclingDays"> Rotazione giorni </label>
+					</div>
+				</div>
 				<div>
 					<input type="checkbox" id="heatMap" :checked="heatMap" @click="showHeatMap"/>
 					<label for="heatMap"> Mostra mappa di calore </label>

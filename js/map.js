@@ -2,6 +2,21 @@
 
 let map;
 let carIcon;
+
+const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	maxZoom: 19,
+	attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+});
+
+carIcon = L.Icon.extend({
+	options:{
+		iconUrl: "resources/car-front.svg",
+		popupAnchor: [-3, -20]
+		//className: "markerDirectionAnim"
+	}
+});
+
+
 //initMap();
 
 function initMap(){
@@ -14,12 +29,6 @@ function initMap(){
 
 function resetMap(){
 
-
-	const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		maxZoom: 19,
-		attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-	});
-
 	if(typeof map !== "undefined"){
 		map.remove();
 	}
@@ -29,14 +38,6 @@ function resetMap(){
 		zoom: 13,
 		layers: tiles
 		//layers: tiles
-	});
-
-	carIcon = L.Icon.extend({
-		options:{
-			iconUrl: "resources/car-front.svg",
-			popupAnchor: [-3, -20]
-			//className: "markerDirectionAnim"
-		}
 	});
 
 }
@@ -96,7 +97,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			else{
 				let newgeoPoints = streetsTrafficWithDirection[key]["geoPoint"];
 				newgeoPoints.push([item["latitudine"], item["longitudine"]]);
-				streetsTrafficWithDirection[key] = {streetName: item["nome_via"], totalCars: parseInt(streetsTrafficWithDirection[key]["totalCars"]) + cars, geoPoint: newgeoPoints, direction: item["direzione"]};
+				streetsTrafficWithDirection[key] = {streetName: item["nome_via"], totalCars: parseInt(streetsTrafficWithDirection[key]["totalCars"]) + cars, geoPoint: newgeoPoints, direction: item["direzione"], date: item["data"]};
 			}
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
@@ -127,10 +128,10 @@ function showMarkers_icons(streetsTrafficWithDirection){
 	for([key, value] of Object.entries(streetsTrafficWithDirection)){
 		if(value["direction"].length > 0 && value["totalCars"] > 0){
 			let size = 50 * (value["totalCars"] / maxCars); // Calcolo dimensione segnalino in base a quello con più auto
-			size = size < 5 ? 5 : size; // Serve per non fare segnalini troppo piccoli
+			size = size < 8 ? 8 : size; // Serve per non fare segnalini troppo piccoli
 			if(value["geoPoint"].length <= 1 || !document.getElementById("animatedMarkers").checked){
 				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(map);
-				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100);	
+				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
 			}
 			else{
 				let pointList = [];
@@ -151,7 +152,7 @@ function showMarkers_icons(streetsTrafficWithDirection){
 					pointList.push({latlng: [point[0], point[1]]});
 				}
 				let markerPlayer = L.markerPlayer(pointList, 5000, {icon: new carIcon({iconSize: [size, size]}), loop: true, autostart: true}).addTo(map);
-				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100);	
+				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
 			}
 		}
 	}
@@ -302,4 +303,34 @@ function getMax_spire(spireDictionary){
 		}
 	}
 	return max;
+}
+
+function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true, daysInterval = 1){
+	data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
+	let startDate = addDays(new Date(data[0]["data"]), -1);
+	let endDate = new Date(data[data.length - 1]["data"]);
+	//for(let curDate = startDate; curDate < endDate; curDate = addDays(curDate, 1)){
+	let curDate = startDate;
+	setInterval(function(){
+		if(document.getElementById("cyclingDays").checked){
+			curDate = addDays(curDate, 1);
+			if(curDate > endDate){
+				curDate = startDate;
+				curDate = addDays(curDate, 1);
+			}
+			let curData = data.filter((item) => item["data"] === curDate.toLocaleDateString("en-CA"));
+			showTrafficData(curData, startHour, endHour, wholeDay);	
+		}
+		else{
+			return;
+		}
+	}, 5000);
+	//}
+	return;
+}
+
+function addDays(date, days){
+	date = new Date(date);
+	date.setDate(date.getDate() + days);
+	return date;
 }
