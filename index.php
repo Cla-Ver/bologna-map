@@ -48,8 +48,19 @@ require "utilities.php";
 				</div>
 				<div id="cyclingDaysDiv" class="hide">
 					<div>
-						<input type="checkbox" id="cyclingDays" :checked="cyclingDays"/>
+						<input type="checkbox" id="cyclingDays" @click="toggleCyclingDays" :checked="cyclingDays"/>
 						<label for="cyclingDays"> Rotazione giorni </label>
+					</div>
+					<div id="rotationTypeDiv" class="hide">
+						<div>
+							<label for="rotationType">Tipo rotazione: </label>
+							<select id="rotationType">
+								<option value="day"> Giorno </option>
+								<option value="week"> Settimana </option>
+								<option value="month"> Mese </option>
+								<!--option value="year"> Anno </option-->
+							</select>
+						</div>
 					</div>
 				</div>
 				<div>

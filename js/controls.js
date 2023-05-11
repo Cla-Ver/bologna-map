@@ -63,6 +63,12 @@ createApp({
 	  },
 	  toggleCyclingDays(){
 		this.cyclingDays = !this.cyclingDays;
+		if(this.cyclingDays){
+			document.getElementById("rotationTypeDiv").removeAttribute("class");
+		}
+		else{
+			document.getElementById("rotationTypeDiv").setAttribute("class", "hide");
+		}
 	  }
   }
 }).mount('#app')
