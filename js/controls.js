@@ -88,7 +88,7 @@ $(document).ready(function(){
 			"cyclingDays": document.getElementById("cyclingDays").checked
 			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
-		if(e.target.id === "cyclingDays"){
+		if(document.getElementById("cyclingDays").checked){
 			$.post("ajax.php", data, function(result, status){
 				if(status === "success"){
 					if(result.length > 0){

@@ -321,19 +321,19 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 	let endDate = addDays(new Date(data[data.length - 1]["data"]), 1);
 	let curDate = startDate;
 	let dateInterval = curDate;
-	let i = 0;
+	let i = 50;
 	let cyclingDays = document.getElementById("cyclingDays").checked;
 	let rotType = document.getElementById("rotationType").value;
 	const cd = setInterval(function(){
-		i++;
+		//Il contatore i serve per far sì che la mappa sia reattiva ai cambiamenti. La mappa passa al set di dati successivo ogni 5 secondi. Se entro questo periodo di tempo l'utente cambia tipo di visualizzazione (es da settimane a giorni), senza questo contatore
+		//dovrebbe essere costretto ad aspettare che scadano i 5 secondi prima di vedere i cambiamenti.
+		//Con questo contatore invece si può usare all'incirca il concetto di polling, ovvero all'utente visivamente non cambia niente, però se decide di cambiare l'intervallo di tempo visualizzato, vedrà più in fretta il cambiamento.
+		//Questa funzione viene ripetuta di frequente per evitare che se l'utente preme la checkbox due volte vicine tra loro, rischia che vi siano due timer attivi e che la visualizzazione si aggiorni in modo non corretto
 		if(i >= 50 || cyclingDays !== document.getElementById("cyclingDays").checked || rotType !== document.getElementById("rotationType").value){
 			if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
 				if(curDate > endDate){
 					curDate = startDate;
 				}
-				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && new Date(item["data"]) < new Date(curDate));
-				showTrafficData(curData, startHour, endHour, wholeDay);
-				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + curDate.toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
 				dateInterval = curDate;
 				switch(document.getElementById("rotationType").value){
 					case "week":
@@ -361,6 +361,9 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 					default:
 						curDate = addDays(curDate, 1);
 				}
+				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && new Date(item["data"]) < new Date(curDate));
+				showTrafficData(curData, startHour, endHour, wholeDay);
+				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + curDate.toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
 			}
 			else{
 				document.getElementById("mapTitle").innerHTML = "";
@@ -373,7 +376,7 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 		else{
 			i++;
 		}
-	}, 200);
+	}, 100);
 	//}
 	return;
 }
