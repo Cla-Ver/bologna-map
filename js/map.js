@@ -2,8 +2,8 @@
 
 let map;
 let mapLayerGroup;
-let heatmapLayer;
 let carIcon;
+let cycleTimer = [];
 
 const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	maxZoom: 19,
@@ -54,6 +54,7 @@ function resetMap(){
 
 /*Vado a costruire la mappa con tutte le informazioni in ingresso.*/
 /*Questa funzione non fa alcuna interrogazione al database, ma mostra solamente i dati che le vengono introdotti (variabile data)*/
+/*Non attinge nessun dato dalla parte grafica*/
 function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 	$(document).ready(function(){
 		resetMap();
@@ -63,6 +64,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		let trafficDictionary = {};
 		let spireDictionary = {};
 		let streetsTrafficWithDirection = {};
+		let dates = [];
 		/*Costruzione degli array chiave-valore per spire e strade.*/
 		for(let i = 0; i < data.length; i++) {
 			item = data[i];
@@ -80,6 +82,9 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			}
 			for(let i = startHour; i < endHour; i++){
 				cars += item[('00'+i).slice(-2) + ":00-" + ('00'+(i+1)).slice(-2) + ":00"]; /*Se l'ora ha una sola cifra (0-9), metto uno zero davanti*/
+			}
+			if(dates.indexOf(item["data"]) < 0){
+				dates.push(item["data"]);
 			}
 			if(!(item["nome_via"] in trafficDictionary)){
 				trafficDictionary[item["nome_via"]] = {totalCars: cars, geoPoints: [[item["latitudine"], item["longitudine"]]]};
@@ -113,7 +118,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
 		//showMarkers(spireDictionary);
-		showMarkers_icons(streetsTrafficWithDirection);
+		showMarkers_icons(streetsTrafficWithDirection, dates.length);
 		
 		/*Mostro la via più trafficata*/
 		//showBusiestRoad(trafficDictionary);
@@ -133,7 +138,7 @@ function showMarkers(spireMarkers){
 }
 
 /*Disegna sulla mappa tutti i segnalini delle spire, con o senza animazioni*/
-function showMarkers_icons(streetsTrafficWithDirection){
+function showMarkers_icons(streetsTrafficWithDirection, ndays = 1){
 	let maxCars = getMax_spire(streetsTrafficWithDirection);
 	for([key, value] of Object.entries(streetsTrafficWithDirection)){
 		if(value["direction"].length > 0 && value["totalCars"] > 0){
@@ -141,7 +146,7 @@ function showMarkers_icons(streetsTrafficWithDirection){
 			size = size < 8 ? 8 : size; // Serve per non fare segnalini troppo piccoli
 			if(value["geoPoint"].length <= 1 || !document.getElementById("animatedMarkers").checked){
 				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(mapLayerGroup);
-				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
+				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Media veicoli giornaliera: " + Math.floor(value["totalCars"] / ndays));	
 			}
 			else{
 				let pointList = [];
@@ -294,7 +299,7 @@ function heatmap_plugin(spireDictionary){
 		lngField: "lng"
 	};
 
-	heatmapLayer = new HeatmapOverlay(config);
+	let heatmapLayer = new HeatmapOverlay(config);
 
 	mapLayerGroup.addLayer(heatmapLayer);
 	heatmapLayer.setData({
@@ -316,20 +321,25 @@ function getMax_spire(spireDictionary){
 }
 
 function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
+	/*Serve per interrompere il timer precedente se si vogliono visualizzare informazioni diverse ma la spunta "rotazione giorni" non è mai stata disattivata */
+	while(cycleTimer.length >= 1){
+		let timer = cycleTimer.pop();
+		clearInterval(timer);
+	}
 	data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
 	let startDate = new Date(data[0]["data"]);
-	let endDate = addDays(new Date(data[data.length - 1]["data"]), 1);
+	let endDate = new Date(data[data.length - 1]["data"]);
+	startDate.setHours(0, 0, 0); //Se non imposto ore, minuti e secondi a zero, di default vengono impostati al momento della creazione della variabile
+	endDate.setHours(0, 0, 0);
 	let curDate = startDate;
 	let dateInterval = curDate;
 	let i = 50;
-	let cyclingDays = document.getElementById("cyclingDays").checked;
-	let rotType = document.getElementById("rotationType").value;
 	const cd = setInterval(function(){
 		//Il contatore i serve per far sì che la mappa sia reattiva ai cambiamenti. La mappa passa al set di dati successivo ogni 5 secondi. Se entro questo periodo di tempo l'utente cambia tipo di visualizzazione (es da settimane a giorni), senza questo contatore
 		//dovrebbe essere costretto ad aspettare che scadano i 5 secondi prima di vedere i cambiamenti.
 		//Con questo contatore invece si può usare all'incirca il concetto di polling, ovvero all'utente visivamente non cambia niente, però se decide di cambiare l'intervallo di tempo visualizzato, vedrà più in fretta il cambiamento.
 		//Questa funzione viene ripetuta di frequente per evitare che se l'utente preme la checkbox due volte vicine tra loro, rischia che vi siano due timer attivi e che la visualizzazione si aggiorni in modo non corretto
-		if(i >= 50 || cyclingDays !== document.getElementById("cyclingDays").checked || rotType !== document.getElementById("rotationType").value){
+		if(i >= 50){
 			if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
 				if(curDate > endDate){
 					curDate = startDate;
@@ -361,22 +371,21 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 					default:
 						curDate = addDays(curDate, 1);
 				}
-				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && new Date(item["data"]) < new Date(curDate));
+				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < new Date(curDate)));
 				showTrafficData(curData, startHour, endHour, wholeDay);
-				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + curDate.toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
+				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + addDays(curDate, -1).toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
 			}
 			else{
 				document.getElementById("mapTitle").innerHTML = "";
 				clearInterval(cd);
 			}	
 			i = 0;
-			cyclingDays = document.getElementById("cyclingDays").checked;
-			rotType = document.getElementById("rotationType").value;
 		}
 		else{
 			i++;
 		}
 	}, 100);
+	cycleTimer.push(cd);
 	//}
 	return;
 }
