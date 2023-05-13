@@ -36,7 +36,6 @@ createApp({
 		this.alerts = "";
 		if(!this.singleDay && new Date(document.getElementById("startDay").value).getTime() > new Date(document.getElementById("endDay").value).getTime()){
 			this.alerts += "<h2>Attenzione: la data di inizio è meno recente della data di fine</h2>";
-			console.log("ciao");
 		}
 		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== 0 && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
 			this.alerts += "<h2>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h2>";

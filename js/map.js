@@ -3,7 +3,7 @@
 let map;
 let mapLayerGroup;
 let carIcon;
-let cycleTimer = [];
+let cycleTimer;
 
 const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	maxZoom: 19,
@@ -322,9 +322,8 @@ function getMax_spire(spireDictionary){
 
 function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 	/*Serve per interrompere il timer precedente se si vogliono visualizzare informazioni diverse ma la spunta "rotazione giorni" non è mai stata disattivata */
-	while(cycleTimer.length >= 1){
-		let timer = cycleTimer.pop();
-		clearInterval(timer);
+	if(typeof cycleTimer !== "undefined"){
+		clearInterval(cycleTimer);
 	}
 	data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
 	let startDate = new Date(data[0]["data"]);
@@ -333,59 +332,48 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 	endDate.setHours(0, 0, 0);
 	let curDate = startDate;
 	let dateInterval = curDate;
-	let i = 50;
 	const cd = setInterval(function(){
-		//Il contatore i serve per far sì che la mappa sia reattiva ai cambiamenti. La mappa passa al set di dati successivo ogni 5 secondi. Se entro questo periodo di tempo l'utente cambia tipo di visualizzazione (es da settimane a giorni), senza questo contatore
-		//dovrebbe essere costretto ad aspettare che scadano i 5 secondi prima di vedere i cambiamenti.
-		//Con questo contatore invece si può usare all'incirca il concetto di polling, ovvero all'utente visivamente non cambia niente, però se decide di cambiare l'intervallo di tempo visualizzato, vedrà più in fretta il cambiamento.
-		//Questa funzione viene ripetuta di frequente per evitare che se l'utente preme la checkbox due volte vicine tra loro, rischia che vi siano due timer attivi e che la visualizzazione si aggiorni in modo non corretto
-		if(i >= 50){
-			if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
-				if(curDate > endDate){
-					curDate = startDate;
-				}
-				dateInterval = curDate;
-				switch(document.getElementById("rotationType").value){
-					case "week":
-						/*Serve per capire se ho fatto un giro completo di tutti i giorni da considerare. Se sì, ricomincio da capo nella visualizzazione */
-						if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
-							dateInterval = startDate;
-							curDate = startDate;
-						}
-						curDate = addDays(curDate, 7);
-						/*Se la settimana supera la data massima entro la quale voglio visualizzare i dati, la riduco opportunamente */
-						while(curDate > endDate){
-							curDate = addDays(curDate, -1);
-						}	
-						break;
-					case "month":
-						if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
-							dateInterval = startDate;
-							curDate = startDate;
-						}
-						curDate = addMonth(curDate);
-						while(curDate > endDate){
-							curDate = addDays(curDate, -1);
-						}	
-						break;
-					default:
-						curDate = addDays(curDate, 1);
-				}
-				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < new Date(curDate)));
-				showTrafficData(curData, startHour, endHour, wholeDay);
-				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + addDays(curDate, -1).toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
+		if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
+			if(curDate > endDate){
+				curDate = startDate;
 			}
-			else{
-				document.getElementById("mapTitle").innerHTML = "";
-				clearInterval(cd);
-			}	
-			i = 0;
+			dateInterval = curDate;
+			switch(document.getElementById("rotationType").value){
+				case "week":
+					/*Serve per capire se ho fatto un giro completo di tutti i giorni da considerare. Se sì, ricomincio da capo nella visualizzazione */
+					if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
+						dateInterval = startDate;
+						curDate = startDate;
+					}
+					curDate = addDays(curDate, 7);
+					/*Se la settimana supera la data massima entro la quale voglio visualizzare i dati, la riduco opportunamente */
+					while(curDate > endDate){
+						curDate = addDays(curDate, -1);
+					}	
+					break;
+				case "month":
+					if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
+						dateInterval = startDate;
+						curDate = startDate;
+					}
+					curDate = addMonth(curDate);
+					while(curDate > endDate){
+						curDate = addDays(curDate, -1);
+					}	
+					break;
+				default:
+					curDate = addDays(curDate, 1);
+			}
+			let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < new Date(curDate)));
+			showTrafficData(curData, startHour, endHour, wholeDay);
+			document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + addDays(curDate, -1).toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
 		}
 		else{
-			i++;
+			document.getElementById("mapTitle").innerHTML = "";
+			clearInterval(cd);
 		}
-	}, 100);
-	cycleTimer.push(cd);
+	}, 4000);
+	cycleTimer = cd;
 	//}
 	return;
 }
