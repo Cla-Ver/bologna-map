@@ -58,6 +58,7 @@ function resetMap(){
 function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 	$(document).ready(function(){
 		resetMap();
+		let startTimer = new Date().getTime();
 		if(data.length <= 0){
 			return;
 		}
@@ -126,6 +127,8 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			//showHeatMap(spireDictionary, document.getElementById("heatMapZones").value);
 			heatmap_plugin(spireDictionary);
 		}
+		let endTimer = new Date().getTime();
+		document.getElementById("timer").innerHTML = "Dati caricati in " + (endTimer - startTimer) + " millisecondi";
 	});
 }
 

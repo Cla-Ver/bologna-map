@@ -26,6 +26,7 @@ function scripts(){
 /**/
 function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
   //Dates are YYYY-MM-DD
+  $time_start = microtime(true);
   $startDate = date_create($startDate, timezone_open("Europe/Rome"));
   $connection = connection();
   $endDate = date_create($endDate, timezone_open("Europe/Rome"));
@@ -37,30 +38,23 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
   $i = 0;
   $r = 0;
   $result_rows = array();
-  for($curDate = $startDate; date_diff($curDate, $endDate)->format("%R%a") >= 0; $curDate->modify("+1 day")){
-    //echo date_format($curDate, "Y/m/d") . "\n";
-    $api_formatted_curDate = date_format($curDate,"Y-m-d");
-    $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data=?");
-    $query->bind_param("s", $api_formatted_curDate);
-    $query->execute();
-    $result = $query->get_result();
-    //echo $result->num_rows;
-    //if($result->num_rows <= 0){
-    //  $json_result = insert_newData($api_formatted_curDate);
-   // }
-    //else{
-      while($row = $result->fetch_assoc()){
-        //echo $row["data"] . "\n";
-        $result_rows[] = $row;
-        $r++;
-      }
-      
-    //}
-    $i = $i + 1;
+  $api_formatted_startDate = date_format($startDate, "Y-m-d");
+  $api_formatted_endDate = date_format($endDate, "Y-m-d");
+  $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
+  $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
+  $query->execute();
+  $result = $query->get_result();
+  while($row = $result->fetch_assoc()){
+    //echo $row["data"] . "\n";
+    $result_rows[] = $row;
   }
   $json_result = json_encode($result_rows);
+  $time_end = microtime(true);
+  //echo "Dati in DB reperiti in " . floor(($time_end - $time_start) * 100) / 100 . " secondi";
   return $json_result;
 }
+
+
 
 function connection(){
   $connection = new mysqli("127.0.0.1:3307", "root", "P4tchouliKnownledg3", "prova");

@@ -19,9 +19,11 @@ require "utilities.php";
 				<div id="alerts">
 					{{alerts}}
 				</div>
+				<div id="timer">
+				</div>
 				<div>
 					<label for="startDay">Giorno iniziale di cui visualizzare le informazioni:</label>
-					<input type="date" id="startDay" name="startDay" :onchange="checkAlerts" value="2022-10-30">
+					<input type="date" id="startDay" name="startDay" :onchange="startDayChange" value="2022-10-30">
 				</div>
 				
 				<div id="endDayDiv">

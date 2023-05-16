@@ -40,8 +40,8 @@ createApp({
 		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== 0 && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
 			this.alerts += "<h2>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h2>";
 		}
-		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) !== 2022 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) !== 2022)){
-			this.alerts += "<h2>Attenzione: nel database sono presenti dati solo per l'anno 2022</h2>"
+		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022)){
+			this.alerts += "<h2>Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022</h2>"
 		}
 		//alert("ciao");
 	  },
@@ -67,6 +67,12 @@ createApp({
 		}
 		else{
 			document.getElementById("rotationTypeDiv").setAttribute("class", "hide");
+		}
+	  },
+	  startDayChange(){
+		this.checkAlerts();
+		if(this.singleDay){
+			document.getElementById("endDay").value = document.getElementById("startDay").value;
 		}
 	  }
   }
