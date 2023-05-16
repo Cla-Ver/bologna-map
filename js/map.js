@@ -333,43 +333,33 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 	let endDate = new Date(data[data.length - 1]["data"]);
 	startDate.setHours(0, 0, 0); //Se non imposto ore, minuti e secondi a zero, di default vengono impostati al momento della creazione della variabile
 	endDate.setHours(0, 0, 0);
-	let curDate = startDate;
-	let dateInterval = curDate;
+	let curDate = new Date(startDate);
+	let dateInterval = new Date(curDate);
 	const cd = setInterval(function(){
 		if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
-			if(curDate > endDate){
-				curDate = startDate;
+			if(curDate > endDate || curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
+				curDate = new Date(startDate);
+				dateInterval = new Date(startDate);
 			}
 			dateInterval = curDate;
 			switch(document.getElementById("rotationType").value){
 				case "week":
-					/*Serve per capire se ho fatto un giro completo di tutti i giorni da considerare. Se sì, ricomincio da capo nella visualizzazione */
-					if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
-						dateInterval = startDate;
-						curDate = startDate;
-					}
 					curDate = addDays(curDate, 7);
 					/*Se la settimana supera la data massima entro la quale voglio visualizzare i dati, la riduco opportunamente */
-					while(curDate > endDate){
-						curDate = addDays(curDate, -1);
-					}	
 					break;
 				case "month":
-					if(curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
-						dateInterval = startDate;
-						curDate = startDate;
-					}
 					curDate = addMonth(curDate);
-					while(curDate > endDate){
-						curDate = addDays(curDate, -1);
-					}	
 					break;
 				default:
 					curDate = addDays(curDate, 1);
+					break;
 			}
-			let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < new Date(curDate)));
+			while(curDate > endDate){
+				curDate = addDays(curDate, -1);
+			}
+			let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < curDate));
 			showTrafficData(curData, startHour, endHour, wholeDay);
-			document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.toLocaleDateString("en-IT") + " al " + addDays(curDate, -1).toLocaleDateString("en-IT") + " (" + startHour + ":00 - " + endHour + ":00)";
+			document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.getDate() + "/" + (dateInterval.getMonth() + 1) + "/" + dateInterval.getFullYear() + " al " + (curDate.getDate() - 1) + "/" + (curDate.getMonth() + 1) + "/" + curDate.getFullYear() + " (" + startHour + ":00 - " + endHour + ":00)";
 		}
 		else{
 			document.getElementById("mapTitle").innerHTML = "";
@@ -388,6 +378,7 @@ function addDays(date, days){
 }
 
 function addMonth(date) {
+	date = new Date(date);
     let d = date.getDate();
     date.setMonth(date.getMonth() + 1);
     if (date.getDate() != d) {
