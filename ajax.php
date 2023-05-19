@@ -11,7 +11,8 @@ if(isset($_POST["action"])){
             $_POST["startTime"] = "00:00";
             $_POST["endTime"] = "24:00";
         }
-        echo get_traffic_data($_POST["startDate"], $_POST["endDate"], explode(":", $_POST["startTime"])[0], explode(":", $_POST["endTime"][0]));
+        $optimization = $_POST["cyclingDays"];
+        echo get_traffic_data($_POST["startDate"], $_POST["endDate"], explode(":", $_POST["startTime"])[0], explode(":", $_POST["endTime"][0]), $optimization);
         return;
     }
 }

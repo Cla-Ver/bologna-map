@@ -86,7 +86,7 @@ require "utilities.php";
 	</body>
 	<?php echo scripts(); ?>
 <?php 
-show_traffic_data("2022-10-30", "2022-10-30");
+show_traffic_data("2022-10-30", "2022-11-23");
 ?>
 
 </html>

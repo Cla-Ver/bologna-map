@@ -24,7 +24,7 @@ function scripts(){
 }
 
 /**/
-function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
+function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $optimized = true){
   //Dates are YYYY-MM-DD
   $time_start = microtime(true);
   $startDate = date_create($startDate, timezone_open("Europe/Rome"));
@@ -34,20 +34,86 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24){
     return "";
   }
   //curl_setopt($curl, CURLOPT_HTTPGET, 1); //GET is default
-  $json_result = "";
-  $i = 0;
-  $r = 0;
   $result_rows = array();
   $api_formatted_startDate = date_format($startDate, "Y-m-d");
   $api_formatted_endDate = date_format($endDate, "Y-m-d");
-  $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
+  //L'ottimizzazione viene eseguita quando non si devono mostrare i giorni a rotazione ogni n secondi, in quanto non servono le date precise dei dati, ma solo una loro aggregazione.
+  //Quando invece si vuole far vedere i giorni/settimane a rotazione, serve sapere le date precise dei dati in quanto essi devono essere visualizzati per periodi differenti (es. 23 giugno -> 23 luglio), per cui non è possibile aggregarli preventivamente
+  if($optimized){
+  // ------------------ Reperimento dati mensili aggregati --------------------
+    $startMonth = $startDate;
+    date_add($startMonth, date_interval_create_from_date_string("1 month"));
+    $startMonth = explode("-", $startMonth->format("Y-m-d"))[1];
+    $endMonth = $endDate;
+    date_sub($endMonth, date_interval_create_from_date_string("1 month"));
+    $endMonth = explode("-", $endMonth->format("Y-m-d"))[1];
+    // Ho almeno un mese pieno
+    if($startMonth <= $endMonth){
+      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ?");
+      $query->bind_param("ii", $startMonth, $endMonth);
+      $query->execute();
+      $result = $query->get_result();
+      while($row = $result->fetch_assoc()){
+        $result_rows[] = $row;
+      }
+    }
+    // -------------- Reperimento dati giornalieri rimanenti -------------------
+    //Se il mese di fine ed inizio è lo stesso
+    if(explode("-", $api_formatted_startDate)[1] == explode("-", $api_formatted_endDate)[1]){
+      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
+      $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
+      $query->execute();
+      $result = $query->get_result();
+      while($row = $result->fetch_assoc()){
+        //echo $row["data"] . "\n";
+        $result_rows[] = $row;
+      }  
+    }
+    else{
+      $endOfStartingMonth = date("Y-m-t", strtotime($api_formatted_startDate));
+      
+      $startOfEndMonth = date("Y-m-01", strtotime($api_formatted_endDate));
+      // echo "SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN " . $api_formatted_startDate . " AND ". $endOfStartingMonth . " AND data BETWEEN " . $startOfEndMonth . " AND ". $api_formatted_endDate;
+      // SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN 2022-10-30 AND 2022-10-31 AND data BETWEEN 2022-11-01 AND 2022-11-23
+      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ? OR data BETWEEN ? AND ?");
+      $query->bind_param("ssss", $api_formatted_startDate, $endOfStartingMonth, $startOfEndMonth, $api_formatted_endDate);
+      $query->execute();
+      $result = $query->get_result();
+      while($row = $result->fetch_assoc()){
+        $result_rows[] = $row;
+      }
+    }
+  }
+  else{
+    $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
+    $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
+    $query->execute();
+    $result = $query->get_result();
+    while($row = $result->fetch_assoc()){
+      //echo $row["data"] . "\n";
+      $result_rows[] = $row;
+    }
+  }
+  /*$endOfStartingMonth = date("Y-m-t", $api_formatted_startDate);
+  $startOfEndMonth = date("Y-m-01", $api_formatted_endDate);
+  $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ? AND data BETWEEN ? AND ?");
+  $query->bind_param("ssss", $api_formatted_startDate, $endOfStartingMonth, $startOfEndMonth, $api_formatted_endDate);
+  $query->execute();
+  $result = $query->get_result();
+  while($row = $result->fetch_assoc()){
+    //echo $row["data"] . "\n";
+    $result_rows[] = $row;
+  }*/
+  // ----------------------- Fine reperimento dati --------------------------
+
+  /*$query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
   $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
   $query->execute();
   $result = $query->get_result();
   while($row = $result->fetch_assoc()){
     //echo $row["data"] . "\n";
     $result_rows[] = $row;
-  }
+  }*/
   $json_result = json_encode($result_rows);
   $time_end = microtime(true);
   //echo "Dati in DB reperiti in " . floor(($time_end - $time_start) * 100) / 100 . " secondi";

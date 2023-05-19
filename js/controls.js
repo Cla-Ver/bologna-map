@@ -3,7 +3,6 @@ import { createApp } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js'
 createApp({
   data() {
 	return {
-	  message: 'Hello Vue!',
 	  alerts: '',
 	  wholeDay: true,
 	  singleDay: true,
@@ -93,28 +92,21 @@ $(document).ready(function(){
 			"cyclingDays": document.getElementById("cyclingDays").checked
 			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
-		if(document.getElementById("cyclingDays").checked){
-			$.post("ajax.php", data, function(result, status){
-				if(status === "success"){
-					if(result.length > 0){
-						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
-					}
-				}
-				else{
-					console.log("Ajax error in cycling days");
-				}
-			});	
-			return;
-		}
 		$.post("ajax.php", data, function(result, status){
 			if(status === "success"){
 				if(result.length > 0){
-					showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+					console.log(result);
+					if(document.getElementById("cyclingDays").checked){
+						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+					}	
+					else{
+						showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+					}		
 				}
 			}
 			else{
-				console.log("Ajax error in showing traffic data");
+				console.log("Ajax error");
 			}
-		});
+		});	
 	});
 });
