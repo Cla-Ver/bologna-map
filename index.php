@@ -3,6 +3,8 @@
 <?php
 
 require "utilities.php";
+$months =  ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+$years = [2019, 2020, 2021];
 
 ?>
 <html>

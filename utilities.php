@@ -43,14 +43,17 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
   // ------------------ Reperimento dati mensili aggregati --------------------
     $startMonth = $startDate;
     date_add($startMonth, date_interval_create_from_date_string("1 month"));
+    $startYear = explode("-", $startMonth->format("Y-m-d"))[0];
     $startMonth = explode("-", $startMonth->format("Y-m-d"))[1];
     $endMonth = $endDate;
     date_sub($endMonth, date_interval_create_from_date_string("1 month"));
+    $endYear = explode("-", $endMonth->format("Y-m-d"))[0];
     $endMonth = explode("-", $endMonth->format("Y-m-d"))[1];
+    
     // Ho almeno un mese pieno
     if($startMonth <= $endMonth){
-      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ?");
-      $query->bind_param("ii", $startMonth, $endMonth);
+      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ? AND anno BETWEEN ? AND ?");
+      $query->bind_param("iiii", $startMonth, $endMonth, $startYear, $endYear);
       $query->execute();
       $result = $query->get_result();
       while($row = $result->fetch_assoc()){
