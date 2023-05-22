@@ -89,7 +89,8 @@ $(document).ready(function(){
 			"singleDay": document.getElementById("singleDay").checked,
 			"showHeatMap": document.getElementById("heatMap").checked,
 			"animatedMarkers": document.getElementById("animatedMarkers").checked,
-			"cyclingDays": document.getElementById("cyclingDays").checked
+			"cyclingDays": document.getElementById("cyclingDays").checked,
+			"rotationType": document.getElementById("rotationType").value
 			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
 		$.post("ajax.php", data, function(result, status){

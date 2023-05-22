@@ -88,7 +88,7 @@ $years = [2019, 2020, 2021];
 	</body>
 	<?php echo scripts(); ?>
 <?php 
-show_traffic_data("2022-10-30", "2022-11-23");
+show_traffic_data("2021-10-30", "2022-11-23");
 ?>
 
 </html>
