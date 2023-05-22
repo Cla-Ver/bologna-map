@@ -42,7 +42,9 @@ createApp({
 		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022)){
 			this.alerts += "<h2>Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022</h2>"
 		}
-		//alert("ciao");
+		if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))) > 60){
+			this.alerts += "<h2>Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera per periodi superiori a 60 giorni.</h2>"
+		}
 	  },
 	  showHeatMap(){
 		this.heatMap = !this.heatMap;
@@ -93,10 +95,13 @@ $(document).ready(function(){
 			"rotationType": document.getElementById("rotationType").value
 			//"heatMapZones": document.getElementById("heatMapZones").value
 		};
+		/*if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))) > 60){
+			return;
+		}*/
 		$.post("ajax.php", data, function(result, status){
 			if(status === "success"){
 				if(result.length > 0){
-					console.log(result);
+					//console.log(result);
 					if(document.getElementById("cyclingDays").checked){
 						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
 					}	
@@ -111,3 +116,10 @@ $(document).ready(function(){
 		});	
 	});
 });
+
+/*Differenza tra due date in giorni */
+function date_diff(date1, date2){
+	date1 = new Date(date1);
+	date2 = new Date(date2);
+	return (date1 - date2) / (1000*60*60*24);
+}

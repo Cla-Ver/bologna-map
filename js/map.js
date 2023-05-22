@@ -325,49 +325,80 @@ function getMax_spire(spireDictionary){
 
 function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 	/*Serve per interrompere il timer precedente se si vogliono visualizzare informazioni diverse ma la spunta "rotazione giorni" non è mai stata disattivata */
+	let months = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
 	if(typeof cycleTimer !== "undefined"){
 		clearInterval(cycleTimer);
 	}
-	data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
-	let startDate = new Date(data[0]["data"]);
-	let endDate = new Date(data[data.length - 1]["data"]);
-	startDate.setHours(0, 0, 0); //Se non imposto ore, minuti e secondi a zero, di default vengono impostati al momento della creazione della variabile
-	endDate.setHours(0, 0, 0);
-	let curDate = new Date(startDate);
-	let dateInterval = new Date(curDate);
-	const cd = setInterval(function(){
-		if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked){
-			if(curDate > endDate || curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
-				curDate = new Date(startDate);
-				dateInterval = new Date(startDate);
+	if(typeof data[0]["data"] !== "undefined"){
+		data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
+		let startDate = new Date(data[0]["data"]);
+		let endDate = new Date(data[data.length - 1]["data"]);
+		startDate.setHours(0, 0, 0); //Se non imposto ore, minuti e secondi a zero, di default vengono impostati al momento della creazione della variabile
+		endDate.setHours(0, 0, 0);
+		let curDate = new Date(startDate);
+		let dateInterval = new Date(curDate);
+		const cd = setInterval(function(){
+			if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked && document.getElementById("rotationType").value === "day"){
+				if(curDate > endDate || curDate.toLocaleDateString("en-IT") === endDate.toLocaleDateString("en-IT")){
+					curDate = new Date(startDate);
+					dateInterval = new Date(startDate);
+				}
+				dateInterval = curDate;
+				switch(document.getElementById("rotationType").value){
+					case "week":
+						curDate = addDays(curDate, 7);
+						/*Se la settimana supera la data massima entro la quale voglio visualizzare i dati, la riduco opportunamente */
+						break;
+					case "month":
+						curDate = addMonth(curDate);
+						break;
+					default:
+						curDate = addDays(curDate, 1);
+						break;
+				}
+				while(curDate > endDate){
+					curDate = addDays(curDate, -1);
+				}
+				let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < curDate));
+				showTrafficData(curData, startHour, endHour, wholeDay);
+				document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.getDate() + "/" + (dateInterval.getMonth() + 1) + "/" + dateInterval.getFullYear() + " al " + (curDate.getDate() - 1) + "/" + (curDate.getMonth() + 1) + "/" + curDate.getFullYear() + " (" + startHour + ":00 - " + endHour + ":00)";
 			}
-			dateInterval = curDate;
-			switch(document.getElementById("rotationType").value){
-				case "week":
-					curDate = addDays(curDate, 7);
-					/*Se la settimana supera la data massima entro la quale voglio visualizzare i dati, la riduco opportunamente */
-					break;
-				case "month":
-					curDate = addMonth(curDate);
-					break;
-				default:
-					curDate = addDays(curDate, 1);
-					break;
+			else{
+				document.getElementById("mapTitle").innerHTML = "";
+				clearInterval(cd);
 			}
-			while(curDate > endDate){
-				curDate = addDays(curDate, -1);
+		}, 4000);
+		cycleTimer = cd;	
+	}
+	else if(typeof data[0]["mese"] !== "undefined"){
+		let startMonth = data[0]["mese"];
+		let startYear = data[0]["anno"];
+		let endMonth = data[data.length - 1]["mese"];
+		let endYear = data[data.length - 1]["anno"];
+		let curMonth = startMonth;
+		let curYear = startYear;
+		const cd = setInterval(function(){
+			if(document.getElementById("cyclingDays").checked && !document.getElementById("singleDay").checked && document.getElementById("rotationType").value === "month"){
+				if(curYear > endYear || (curYear == endYear && curMonth > endMonth)){
+					curMonth = startMonth;
+					curYear = startYear;
+				}
+				let curData = data.filter((item) => item["mese"] === curMonth && item["anno"] === curYear);
+				showTrafficData(curData, startHour, endHour, wholeDay);
+				document.getElementById("mapTitle").innerHTML = "Dati di " + months[curMonth] + " " + curYear;
+				curMonth++;
+				if(curMonth > 12){
+					curMonth = 1;
+					curYear++;
+				}
 			}
-			let curData = data.filter((item) => new Date(item["data"]) >= dateInterval && (curDate === endDate || new Date(item["data"]) < curDate));
-			showTrafficData(curData, startHour, endHour, wholeDay);
-			document.getElementById("mapTitle").innerHTML = "Dati dal " + dateInterval.getDate() + "/" + (dateInterval.getMonth() + 1) + "/" + dateInterval.getFullYear() + " al " + (curDate.getDate() - 1) + "/" + (curDate.getMonth() + 1) + "/" + curDate.getFullYear() + " (" + startHour + ":00 - " + endHour + ":00)";
-		}
-		else{
-			document.getElementById("mapTitle").innerHTML = "";
-			clearInterval(cd);
-		}
-	}, 4000);
-	cycleTimer = cd;
-	//}
+			else{
+				document.getElementById("mapTitle").innerHTML = "";
+				clearInterval(cd);
+			}
+		}, 4000);
+		cycleTimer = cd;	
+	}
 	return;
 }
 
@@ -386,3 +417,4 @@ function addMonth(date) {
     }
     return date;
 }
+
