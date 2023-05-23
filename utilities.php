@@ -49,11 +49,12 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
   date_sub($endMonth, date_interval_create_from_date_string("1 month"));
   $endYear = explode("-", $endMonth->format("Y-m-d"))[0];
   $endMonth = explode("-", $endMonth->format("Y-m-d"))[1];
+  $diff = date_diff($startDate, $endDate);
   if($rotation == false || $rotation == "false"){
     //echo $endDate->format("Y-m-d");
     // ------------------ Reperimento dati mensili aggregati --------------------
     // Ho almeno un mese pieno
-    $diff = date_diff($startDate, $endDate);
+    
     if($diff->format("%m") > 1){
       $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ? AND anno BETWEEN ? AND ?");
       $query->bind_param("iiii", $startMonth, $endMonth, $startYear, $endYear);
@@ -93,9 +94,9 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
   else{
     switch($rotationType){
       case "day":
-        /*if($diff->format("%a") > 60){
+        if($diff->format("%a") > 60){
           return;
-        }*/
+        }
         $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
         $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
         $query->execute();

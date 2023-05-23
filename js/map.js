@@ -333,6 +333,7 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 		console.log("Non è arrivato nessun dato");
 		return;
 	}
+	console.log(data);
 	if(typeof data[0]["data"] !== "undefined"){
 		data.sort((a, b) => (new Date(a["data"]) - new Date(b["data"])));
 		let startDate = new Date(data[0]["data"]);

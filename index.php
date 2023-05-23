@@ -18,7 +18,7 @@ $years = [2019, 2020, 2021];
 		<div class="container" id="app">
 			<fieldset>
 				<legend> Controlli </legend>
-				<div id="alerts">
+				<div v-html="alerts">
 					{{alerts}}
 				</div>
 				<div id="timer">
@@ -52,7 +52,7 @@ $years = [2019, 2020, 2021];
 				</div>
 				<div id="cyclingDaysDiv" class="hide">
 					<div>
-						<input type="checkbox" id="cyclingDays" @click="toggleCyclingDays" :checked="cyclingDays"/>
+						<input type="checkbox" id="cyclingDays" @click="toggleCyclingDays" :checked="cyclingDays" :onchange="checkAlerts"/>
 						<label for="cyclingDays"> Rotazione giorni </label>
 					</div>
 					<div id="rotationTypeDiv" class="hide">

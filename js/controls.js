@@ -34,16 +34,19 @@ createApp({
 	  checkAlerts(){
 		this.alerts = "";
 		if(!this.singleDay && new Date(document.getElementById("startDay").value).getTime() > new Date(document.getElementById("endDay").value).getTime()){
-			this.alerts += "<h2>Attenzione: la data di inizio è meno recente della data di fine</h2>";
+			this.alerts += "<h3>Attenzione: la data di inizio è meno recente della data di fine</h3>";
 		}
 		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== 0 && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
-			this.alerts += "<h2>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h2>";
+			this.alerts += "<h3>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h3>";
 		}
 		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022)){
-			this.alerts += "<h2>Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022</h2>"
+			this.alerts += "<h3>Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022</h3>"
 		}
-		if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))) > 60){
-			this.alerts += "<h2>Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera per periodi superiori a 60 giorni.</h2>"
+		if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay").value)) > 60){
+			this.alerts += "<h3>Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera o settimanale per periodi superiori a 60 giorni.</h3>"
+		}
+		else{
+			//console.log(date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))));
 		}
 	  },
 	  showHeatMap(){
@@ -103,6 +106,7 @@ $(document).ready(function(){
 				if(result.length > 0){
 					//console.log(result);
 					if(document.getElementById("cyclingDays").checked){
+						//console.log(result);
 						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
 					}	
 					else{
@@ -121,5 +125,5 @@ $(document).ready(function(){
 function date_diff(date1, date2){
 	date1 = new Date(date1);
 	date2 = new Date(date2);
-	return (date1 - date2) / (1000*60*60*24);
+	return Math.abs(date1 - date2) / (1000*60*60*24);
 }
