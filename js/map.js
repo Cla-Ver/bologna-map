@@ -59,6 +59,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 	$(document).ready(function(){
 		resetMap();
 		let startTimer = new Date().getTime();
+		console.log(data);
 		if(data.length <= 0){
 			return;
 		}
@@ -66,6 +67,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		let spireDictionary = {};
 		let streetsTrafficWithDirection = {};
 		let dates = [];
+		let month_year = [];
 		/*Costruzione degli array chiave-valore per spire e strade.*/
 		for(let i = 0; i < data.length; i++) {
 			item = data[i];
@@ -86,6 +88,10 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			}
 			if(dates.indexOf(item["data"]) < 0){
 				dates.push(item["data"]);
+			}
+			if(typeof item["mese"] !== "undefined" && typeof item["anno"] !== "undefined" && month_year.indexOf(item["anno"] + "-" + item["mese"]) < 0){
+				//console.log(typeof item["mese"] === "undefined");
+				month_year.push(item["anno"] + "-" + item["mese"]);
 			}
 			if(!(item["nome_via"] in trafficDictionary)){
 				trafficDictionary[item["nome_via"]] = {totalCars: cars, geoPoints: [[item["latitudine"], item["longitudine"]]]};
@@ -119,7 +125,8 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
 		//showMarkers(spireDictionary);
-		showMarkers_icons(streetsTrafficWithDirection, dates.length);
+		console.log(month_year);
+		showMarkers_icons(streetsTrafficWithDirection, dates.length + (month_year.length * 30));
 		
 		/*Mostro la via più trafficata*/
 		//showBusiestRoad(trafficDictionary);
@@ -128,7 +135,7 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 			heatmap_plugin(spireDictionary);
 		}
 		let endTimer = new Date().getTime();
-		document.getElementById("timer").innerHTML = "Dati caricati in " + (endTimer - startTimer) + " millisecondi";
+		//document.getElementById("timer").innerHTML = "Dati caricati in " + (endTimer - startTimer) + " millisecondi";
 	});
 }
 
@@ -143,13 +150,14 @@ function showMarkers(spireMarkers){
 /*Disegna sulla mappa tutti i segnalini delle spire, con o senza animazioni*/
 function showMarkers_icons(streetsTrafficWithDirection, ndays = 1){
 	let maxCars = getMax_spire(streetsTrafficWithDirection);
+	console.log(ndays);
 	for([key, value] of Object.entries(streetsTrafficWithDirection)){
 		if(value["direction"].length > 0 && value["totalCars"] > 0){
 			let size = 50 * (value["totalCars"] / maxCars); // Calcolo dimensione segnalino in base a quello con più auto
 			size = size < 8 ? 8 : size; // Serve per non fare segnalini troppo piccoli
 			if(value["geoPoint"].length <= 1 || !document.getElementById("animatedMarkers").checked){
 				let marker = L.marker([value["geoPoint"][0][0], value["geoPoint"][0][1]], {icon: new carIcon({iconSize: [size, size]})}).addTo(mapLayerGroup);
-				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Media veicoli giornaliera: " + Math.floor(value["totalCars"] / ndays));	
+				marker.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + /*"<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 +*/ "<br>Media veicoli giornaliera: " + Math.floor(value["totalCars"] / ndays));	
 			}
 			else{
 				let pointList = [];

@@ -54,10 +54,22 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
     //echo $endDate->format("Y-m-d");
     // ------------------ Reperimento dati mensili aggregati --------------------
     // Ho almeno un mese pieno
-    
-    if($diff->format("%m") > 1){
-      $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ? AND anno BETWEEN ? AND ?");
-      $query->bind_param("iiii", $startMonth, $endMonth, $startYear, $endYear);
+    //echo $diff->format("%m") + 12 * $diff->format("%y");
+    if($diff->format("%m") + 12 * $diff->format("%y") > 1){
+      $query = "";
+      //echo $startYear . " - ". $endYear;
+      if($startYear != $endYear){
+        $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND 12 AND anno = ? OR mese BETWEEN 1 AND ? AND anno = ? OR mese BETWEEN 1 AND 12 AND anno > ? AND anno < ?");
+        //echo "SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN " . $startMonth . " AND 12 AND anno = " . $startYear . " OR mese BETWEEN 1 AND " . $endMonth . " AND anno = " . $endYear . " OR mese BETWEEN 1 AND 12 AND anno > " . $startYear . " AND anno < " . $endYear;
+        $query->bind_param("iiiiii", $startMonth, $startYear, $endMonth, $endYear, $startYear, $endYear);
+        $query->execute();  
+      }
+      else{
+        //echo "ciao";
+        $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN ? AND ? AND anno = ?");
+        $query->bind_param("iii", $startMonth, $endMonth, $startYear);
+      }
+      //echo "SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-dati-mensili` WHERE mese BETWEEN " . $startMonth . " AND " . $endMonth . " AND anno BETWEEN " . $startYear . " AND " . $endYear;
       $query->execute();
       $result = $query->get_result();
       while($row = $result->fetch_assoc()){
@@ -67,7 +79,7 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
     // -------------- Reperimento dati giornalieri rimanenti -------------------
     //Se il mese ed anno di fine ed inizio sono gli stessi
     if(explode("-", $api_formatted_startDate)[1] == explode("-", $api_formatted_endDate)[1] && explode("-", $api_formatted_startDate)[0] == explode("-", $api_formatted_endDate)[0]){
-      //echo "stesso mese";
+      //echo "stesso mese e stesso anno";
       $query = $connection->prepare("SELECT * FROM `rilevazione-flusso-veicoli-tramite-spire-anno-2022` WHERE data BETWEEN ? AND ?");
       $query->bind_param("ss", $api_formatted_startDate, $api_formatted_endDate);
       $query->execute();

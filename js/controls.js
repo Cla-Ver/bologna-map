@@ -34,16 +34,16 @@ createApp({
 	  checkAlerts(){
 		this.alerts = "";
 		if(!this.singleDay && new Date(document.getElementById("startDay").value).getTime() > new Date(document.getElementById("endDay").value).getTime()){
-			this.alerts += "<h3>Attenzione: la data di inizio è meno recente della data di fine</h3>";
+			this.alerts += "Attenzione: la data di inizio è meno recente della data di fine<br>";
 		}
 		if(!this.wholeDay && parseInt(document.getElementById("endTime").value.split(":")[0]) !== 0 && parseInt(document.getElementById("startTime").value.split(":")[0]) > parseInt(document.getElementById("endTime").value.split(":")[0])){
-			this.alerts += "<h3>Attenzione: l'ora di inizio è più avanti dell'ora di fine</h3>";
+			this.alerts += "Attenzione: l'ora di inizio è più avanti dell'ora di fine<br>";
 		}
-		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022)){
-			this.alerts += "<h3>Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022</h3>"
+		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || parseInt(new Date(document.getElementById("startDay").value).getFullYear()) > 2022 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022) || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) < 2020)){
+			this.alerts += "Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022<br>"
 		}
 		if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay").value)) > 60){
-			this.alerts += "<h3>Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera o settimanale per periodi superiori a 60 giorni.</h3>"
+			this.alerts += "Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera o settimanale per periodi superiori a 60 giorni."
 		}
 		else{
 			//console.log(date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))));
@@ -110,7 +110,12 @@ $(document).ready(function(){
 						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
 					}	
 					else{
+						try{
 						showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+						}
+						catch{
+							console.log(result);
+						}
 					}		
 				}
 			}
