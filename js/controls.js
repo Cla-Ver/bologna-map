@@ -74,10 +74,10 @@ createApp({
 		}
 	  },
 	  startDayChange(){
-		this.checkAlerts();
 		if(this.singleDay){
 			document.getElementById("endDay").value = document.getElementById("startDay").value;
 		}
+		this.checkAlerts();
 	  }
   }
 }).mount('#app')
@@ -114,7 +114,7 @@ $(document).ready(function(){
 						showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
 						}
 						catch{
-							console.log(result);
+							console.log("error on json parse");
 						}
 					}		
 				}

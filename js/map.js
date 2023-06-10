@@ -54,12 +54,11 @@ function resetMap(){
 
 /*Vado a costruire la mappa con tutte le informazioni in ingresso.*/
 /*Questa funzione non fa alcuna interrogazione al database, ma mostra solamente i dati che le vengono introdotti (variabile data)*/
-/*Non attinge nessun dato dalla parte grafica*/
 function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 	$(document).ready(function(){
 		resetMap();
 		let startTimer = new Date().getTime();
-		console.log(data);
+		//console.log(data);
 		if(data.length <= 0){
 			return;
 		}
@@ -125,7 +124,6 @@ function showTrafficData(data, startHour = 0, endHour = 24, wholeDay = true){
 		}
 		/*Inserisco un marker per ogni spira, con le sue varie informazioni*/
 		//showMarkers(spireDictionary);
-		console.log(month_year);
 		showMarkers_icons(streetsTrafficWithDirection, dates.length + (month_year.length * 30));
 		
 		/*Mostro la via più trafficata*/
@@ -150,7 +148,6 @@ function showMarkers(spireMarkers){
 /*Disegna sulla mappa tutti i segnalini delle spire, con o senza animazioni*/
 function showMarkers_icons(streetsTrafficWithDirection, ndays = 1){
 	let maxCars = getMax_spire(streetsTrafficWithDirection);
-	console.log(ndays);
 	for([key, value] of Object.entries(streetsTrafficWithDirection)){
 		if(value["direction"].length > 0 && value["totalCars"] > 0){
 			let size = 50 * (value["totalCars"] / maxCars); // Calcolo dimensione segnalino in base a quello con più auto
@@ -289,15 +286,17 @@ function heatmap_plugin(spireDictionary){
 	traffic = [];
 	let maxCars = getMax_spire(spireDictionary) * 0.7;
 	for([key, value] of Object.entries(spireDictionary)){
-		let spire = {
-			lat: value["geoPoint"][0],
-			lng: value["geoPoint"][1],
-			value: value["totalCars"]
-		};
-		/*spire["lat"] = value["geoPoint"][0];
-		spire["lng"] = value["geoPoint"][1];
-		spire["value"] = Math.floor(value["totalCars"] / maxCars * 100) / 100;*/
-		traffic.push(spire);
+		if(value["totalCars"] > 0){
+			let spire = {
+				lat: value["geoPoint"][0],
+				lng: value["geoPoint"][1],
+				value: value["totalCars"]
+			};
+			/*spire["lat"] = value["geoPoint"][0];
+			spire["lng"] = value["geoPoint"][1];
+			spire["value"] = Math.floor(value["totalCars"] / maxCars * 100) / 100;*/
+			traffic.push(spire);	
+		}
 	}
 	const config = {
 		"maxOpacity": .7,
