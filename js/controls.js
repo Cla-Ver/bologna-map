@@ -42,7 +42,7 @@ createApp({
 		if(parseInt(new Date(document.getElementById("startDay").value).getFullYear()) < 2020 || parseInt(new Date(document.getElementById("startDay").value).getFullYear()) > 2022 || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) > 2022) || (singleDay && parseInt(new Date(document.getElementById("endDay").value).getFullYear()) < 2020)){
 			this.alerts += "Attenzione: nel database sono presenti dati solo per gli anni dal 2020 al 2022<br>"
 		}
-		if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay").value)) > 60){
+		if(this.cyclingDays && (document.getElementById("rotationType").value === "day" || document.getElementById("rotationType").value === "week") && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay").value)) > 60){
 			this.alerts += "Per motivi di efficienza, non è possibile mostrare la rotazione giornaliera o settimanale per periodi superiori a 60 giorni."
 		}
 		else{
@@ -84,46 +84,12 @@ createApp({
 
 $(document).ready(function(){
 	$("input").change(function(e){
-		let data = {
-			"action": "change",
-			"startDate": document.getElementById("startDay").value,
-			"endDate": document.getElementById("endDay").value,
-			"startHour": document.getElementById("startTime").value,
-			"endHour": document.getElementById("endTime").value,
-			"entireDay": document.getElementById("entireDay").checked,
-			"singleDay": document.getElementById("singleDay").checked,
-			"showHeatMap": document.getElementById("heatMap").checked,
-			"animatedMarkers": document.getElementById("animatedMarkers").checked,
-			"cyclingDays": document.getElementById("cyclingDays").checked,
-			"rotationType": document.getElementById("rotationType").value
-			//"heatMapZones": document.getElementById("heatMapZones").value
-		};
-		/*if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))) > 60){
-			return;
-		}*/
-		$.post("ajax.php", data, function(result, status){
-			if(status === "success"){
-				if(result.length > 0){
-					//console.log(result);
-					if(document.getElementById("cyclingDays").checked){
-						//console.log(result);
-						cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
-					}	
-					else{
-						try{
-						showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
-						}
-						catch{
-							console.log("error on json parse");
-						}
-					}		
-				}
-			}
-			else{
-				console.log("Ajax error");
-			}
-		});	
+		control_change();
 	});
+	$("select").change(function(e){
+		control_change();
+	});
+
 });
 
 /*Differenza tra due date in giorni */
@@ -131,4 +97,45 @@ function date_diff(date1, date2){
 	date1 = new Date(date1);
 	date2 = new Date(date2);
 	return Math.abs(date1 - date2) / (1000*60*60*24);
+}
+
+function control_change(){
+	let data = {
+		"action": "change",
+		"startDate": document.getElementById("startDay").value,
+		"endDate": document.getElementById("endDay").value,
+		"startHour": document.getElementById("startTime").value,
+		"endHour": document.getElementById("endTime").value,
+		"entireDay": document.getElementById("entireDay").checked,
+		"singleDay": document.getElementById("singleDay").checked,
+		"showHeatMap": document.getElementById("heatMap").checked,
+		"animatedMarkers": document.getElementById("animatedMarkers").checked,
+		"cyclingDays": document.getElementById("cyclingDays").checked,
+		"rotationType": document.getElementById("rotationType").value
+		//"heatMapZones": document.getElementById("heatMapZones").value
+	};
+	/*if(this.cyclingDays && document.getElementById("rotationType").value === "day" && date_diff(new Date(document.getElementById("startDay").value), new Date(document.getElementById("endDay"))) > 60){
+		return;
+	}*/
+	$.post("ajax.php", data, function(result, status){
+		if(status === "success"){
+			if(result.length > 0){
+				//console.log(result);
+				if(document.getElementById("cyclingDays").checked){
+					cycleDays(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+				}	
+				else{
+					try{
+					showTrafficData(JSON.parse(result), parseInt(data["startHour"]), parseInt(data["endHour"]), data["entireDay"]);
+					}
+					catch{
+						console.log("error on json parse");
+					}
+				}		
+			}
+		}
+		else{
+			console.log("Ajax error");
+		}
+	});	
 }

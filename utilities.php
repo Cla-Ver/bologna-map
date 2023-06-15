@@ -106,6 +106,7 @@ function get_traffic_data($startDate, $endDate, $startHour = 0, $endHour = 24, $
   else{
     switch($rotationType){
       case "day":
+      case "week":
         if($diff->format("%a") > 60){
           return;
         }

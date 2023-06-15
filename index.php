@@ -60,7 +60,7 @@ $years = [2019, 2020, 2021];
 					<div id="rotationTypeDiv" class="hide">
 						<div>
 							<label for="rotationType">Tipo rotazione: </label>
-							<select id="rotationType">
+							<select id="rotationType" :onchange="checkAlerts">
 								<option value="day"> Giorno </option>
 								<option value="week"> Settimana </option>
 								<option value="month"> Mese </option>
