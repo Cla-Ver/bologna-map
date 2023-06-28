@@ -75,7 +75,7 @@ $years = [2019, 2020, 2021];
 				</div>
 				<div>
 					<input type="checkbox" id="animatedMarkers" @click="toggleAnimatedMarkers"/>
-					<label id="animatedMarkersLabel" for="animatedMarkers"> Animazioni markers </label>
+					<label id="animatedMarkersLabel" for="animatedMarkers"> Animazioni segnalini </label>
 				</div>
 				<!--div>
 					<label id="heatMapZonesRangeLabel" for="heatMapZonesRange"> Dimensione dell'area da considerare: </label>

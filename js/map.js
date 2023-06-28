@@ -175,7 +175,7 @@ function showMarkers_icons(streetsTrafficWithDirection, ndays = 1){
 					pointList.push({latlng: [point[0], point[1]]});
 				}
 				let markerPlayer = L.markerPlayer(pointList, 5000, {icon: new carIcon({iconSize: [size, size]}), loop: true, autostart: true}).addTo(mapLayerGroup);
-				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Value: " + Math.floor(value["totalCars"] / maxCars * 100) / 100 + "<br>Data: " + value["date"]);	
+				markerPlayer.bindPopup("Nome via: " + value["streetName"] + "<br>Direzione: " + value["direction"] + "<br>Veicoli transitati: " + value["totalCars"] + "<br>Media veicoli giornaliera: " + Math.floor(value["totalCars"] / ndays));	
 			}
 		}
 	}
