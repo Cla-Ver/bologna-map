@@ -398,7 +398,7 @@ function cycleDays(data, startHour = 0, endHour = 24, wholeDay = true){
 					curMonth = startMonth;
 					curYear = startYear;
 				}
-				let curData = data.filter((item) => item["mese"] === curMonth && item["anno"] === curYear);
+				let curData = data.filter((item) => parseInt(item["mese"]) === parseInt(curMonth) && item["anno"] === curYear);
 				showTrafficData(curData, startHour, endHour, wholeDay);
 				document.getElementById("mapTitle").innerHTML = "Dati di " + months[curMonth] + " " + curYear;
 				curMonth++;
